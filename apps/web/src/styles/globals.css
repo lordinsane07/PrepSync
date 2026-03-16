@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Backgrounds */
+  --color-bg-base: #0A0B0E;
+  --color-bg-surface: #111318;
+  --color-bg-elevated: #1A1D24;
+  --color-bg-overlay: #222631;
+
+  /* Borders */
+  --color-border-subtle: #1E2330;
+  --color-border-default: #2A3040;
+  --color-border-strong: #3D4760;
+
+  /* Text */
+  --color-text-primary: #E8EAF0;
+  --color-text-secondary: #8B91A8;
+  --color-text-muted: #4A5068;
+  --color-text-inverse: #0A0B0E;
+
+  /* Accent */
+  --color-accent: #00D4FF;
+  --color-accent-dim: #0A2A33;
+  --color-accent-border: #0E4455;
+
+  /* Semantic */
+  --color-success: #00E5A0;
+  --color-success-dim: #0A2E22;
+  --color-warning: #FFB020;
+  --color-warning-dim: #2E1F00;
+  --color-danger: #FF4444;
+  --color-danger-dim: #2E0A0A;
+
+  /* Domain colors */
+  --color-domain-dsa: #7C3AED;
+  --color-domain-systemdesign: #0EA5E9;
+  --color-domain-backend: #10B981;
+  --color-domain-conceptual: #F59E0B;
+  --color-domain-behavioural: #EC4899;
+}
+
+/* Base styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-default);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-strong);
+}
+
+/* Focus visible */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background-color: rgba(0, 212, 255, 0.2);
+  color: var(--color-text-primary);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
