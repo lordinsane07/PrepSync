@@ -1,4 +1,10 @@
 export { default as User } from './User';
 export { default as AuthToken } from './AuthToken';
+export { default as Room } from './Room';
+export { default as GroupMessage } from './GroupMessage';
+export { DMThread, DMMessage } from './DM';
 export type { IUser } from './User';
 export type { IAuthToken } from './AuthToken';
+export type { IRoom } from './Room';
+export type { IGroupMessage } from './GroupMessage';
+export type { IDMThread, IDMMessage } from './DM';

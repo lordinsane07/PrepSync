@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
+import { SessionConfigModal } from '@/features/ai-room';
+import { useAuthStore } from '@/stores/authStore';
 
 const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -16,6 +18,8 @@ const PAGE_TITLES: Record<string, string> = {
 export default function AppLayout() {
   const location = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showSessionConfig, setShowSessionConfig] = useState(false);
+  const user = useAuthStore((s) => s.user);
 
   // Auto-collapse sidebar on smaller screens
   useEffect(() => {
@@ -37,16 +41,25 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen bg-bg-base">
       <Sidebar
-        userName="User"
+        userName={user?.name || 'User'}
+        userAvatar={user?.avatarUrl}
+        readinessScore={user?.readinessIndex?.overall}
         collapsed={sidebarCollapsed}
+        onNewSession={() => setShowSessionConfig(true)}
       />
       <div
         className="transition-all duration-200"
         style={{ marginLeft: sidebarCollapsed ? 64 : 240 }}
       >
-        <TopBar title={pageTitle} userName="User" />
+        <TopBar title={pageTitle} userName={user?.name || 'User'} />
         <Outlet />
       </div>
+
+      {/* AI Interview Session Config Modal */}
+      <SessionConfigModal
+        isOpen={showSessionConfig}
+        onClose={() => setShowSessionConfig(false)}
+      />
     </div>
   );
 }

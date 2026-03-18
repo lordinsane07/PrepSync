@@ -9,6 +9,13 @@ import healthRoutes from './routes/health';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/user';
 import sessionRoutes from './routes/session';
+import roomRoutes from './routes/room';
+import groupRoutes from './routes/group';
+import dmRoutes from './routes/dm';
+import codeRoutes from './routes/code';
+import uploadRoutes from './routes/upload';
+import magicLinkRoutes from './routes/magicLink';
+import livekitRoutes from './routes/livekit';
 
 const app = express();
 
@@ -40,6 +47,13 @@ app.use(healthRoutes);
 app.use(authRoutes);
 app.use(userRoutes);
 app.use(sessionRoutes);
+app.use(roomRoutes);
+app.use(groupRoutes);
+app.use(dmRoutes);
+app.use(codeRoutes);
+app.use(uploadRoutes);
+app.use(magicLinkRoutes);
+app.use(livekitRoutes);
 
 // Error handling
 app.use(notFoundHandler);

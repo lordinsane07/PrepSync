@@ -21,11 +21,13 @@
     "helmet": "^7.1.0",
     "ioredis": "^5.4.0",
     "jsonwebtoken": "^9.0.3",
+    "livekit-server-sdk": "^2.15.0",
     "mongoose": "^8.4.0",
     "morgan": "^1.10.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
-    "resend": "^6.9.3"
+    "resend": "^6.9.3",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -38,6 +40,7 @@
     "@types/node": "^20.14.0",
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.17",
+    "mongodb-memory-server": "^11.0.1",
     "nodemon": "^3.1.0",
     "ts-node": "^10.9.0",
     "typescript": "^5.4.0"

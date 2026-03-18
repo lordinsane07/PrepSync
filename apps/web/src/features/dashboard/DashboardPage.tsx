@@ -4,6 +4,7 @@ import WeaknessRadar from './WeaknessRadar';
 import WeeklyGoalRing from './WeeklyGoalRing';
 import DomainReadiness from './DomainReadiness';
 import RecentSessionsTable, { type SessionRow } from './RecentSessionsTable';
+import ActivityHeatmap from './ActivityHeatmap';
 import { useAuthStore } from '@/stores/authStore';
 import type { Domain } from '@prepsync/shared';
 
@@ -120,7 +121,12 @@ export default function DashboardPage() {
         <DomainReadiness data={MOCK_READINESS} />
       </div>
 
-      {/* Row 4: Recent Sessions Table */}
+      {/* Row 4: Activity Heatmap */}
+      <div className="bg-bg-surface border border-border-subtle rounded-lg p-6 mb-6">
+        <ActivityHeatmap />
+      </div>
+
+      {/* Row 5: Recent Sessions Table */}
       <RecentSessionsTable sessions={MOCK_SESSIONS} />
     </PageWrapper>
   );

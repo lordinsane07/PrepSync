@@ -11,6 +11,12 @@ import {
   OnboardingPage,
 } from '@/features/auth';
 import { DashboardPage } from '@/features/dashboard';
+import { AIRoomPage, EvaluationReportPage } from '@/features/ai-room';
+import { PeerRoomPage, JoinRoomPage } from '@/features/peer-room';
+import { DomainGroupsPage } from '@/features/groups';
+import { DMsPage } from '@/features/dms';
+import { SessionHistoryPage } from '@/features/history';
+import { SettingsPage } from '@/features/settings';
 import AuthGuard from '@/components/guards/AuthGuard';
 
 // Placeholder for protected pages — replaced as features are built
@@ -86,7 +92,7 @@ export default function App() {
         <Route path="/auth/magic" element={<PlaceholderPage title="Signing in..." />} />
 
         {/* Peer room join (public — supports guests) */}
-        <Route path="/room/:inviteCode" element={<PlaceholderPage title="Join Room" />} />
+        <Route path="/room/:inviteCode" element={<JoinRoomPage />} />
 
         {/* Protected routes (inside app layout + auth guard) */}
         <Route
@@ -97,14 +103,15 @@ export default function App() {
           }
         >
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/ai-room" element={<PlaceholderPage title="AI Interview" />} />
-          <Route path="/peer-room" element={<PlaceholderPage title="Peer Room" />} />
-          <Route path="/groups" element={<PlaceholderPage title="Domain Groups" />} />
-          <Route path="/groups/:groupId" element={<PlaceholderPage title="Group" />} />
-          <Route path="/dms" element={<PlaceholderPage title="Messages" />} />
-          <Route path="/dms/:threadId" element={<PlaceholderPage title="Conversation" />} />
-          <Route path="/history" element={<PlaceholderPage title="Session History" />} />
-          <Route path="/settings" element={<PlaceholderPage title="Settings" />} />
+          <Route path="/ai-room/:sessionId" element={<AIRoomPage />} />
+          <Route path="/ai-room/:sessionId/report" element={<EvaluationReportPage />} />
+          <Route path="/peer-room" element={<PeerRoomPage />} />
+          <Route path="/groups" element={<DomainGroupsPage />} />
+          <Route path="/groups/:groupId" element={<DomainGroupsPage />} />
+          <Route path="/dms" element={<DMsPage />} />
+          <Route path="/dms/:threadId" element={<DMsPage />} />
+          <Route path="/history" element={<SessionHistoryPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
 
         {/* Catch-all */}
