@@ -4,6 +4,7 @@ import { generateAccessToken, generateRefreshToken } from '../lib/jwt';
 import { hashPassword, comparePassword, hashToken, compareToken } from '../lib/hash';
 import { generateOTP, hashOTP } from '../lib/crypto';
 import { ApiError } from '../middleware/error';
+import { sendVerificationOTP, sendResendVerificationOTP } from '../lib/email';
 import { env } from '../config/env';
 import { VALIDATION } from '@prepsync/shared';
 
@@ -53,8 +54,9 @@ export async function register(
       expiresAt: new Date(Date.now() + VALIDATION.OTP_EXPIRY_MINUTES * 60 * 1000),
     });
 
-    // TODO: Send OTP via Resend email (will be implemented when Resend key is available)
-    console.log(`[Auth] OTP for ${email}: ${otp}`); // Dev only
+    // Send OTP via email
+    console.log(`[Auth] OTP for ${email}: ${otp}`); // Dev fallback
+    await sendVerificationOTP(email, otp, name);
 
     res.status(201).json({
       message: 'Account created. Please check your email for the verification code.',
@@ -127,7 +129,7 @@ export async function verifyEmail(
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/',
     });
@@ -179,7 +181,8 @@ export async function resendVerification(
       expiresAt: new Date(Date.now() + VALIDATION.OTP_EXPIRY_MINUTES * 60 * 1000),
     });
 
-    console.log(`[Auth] Resend OTP for ${user.email}: ${otp}`); // Dev only
+    console.log(`[Auth] Resend OTP for ${user.email}: ${otp}`); // Dev fallback
+    await sendResendVerificationOTP(user.email, otp);
 
     res.json({ message: 'Verification code sent.' });
   } catch (error) {
@@ -257,7 +260,7 @@ export async function login(
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: ttl,
       path: '/',
     });
@@ -330,7 +333,7 @@ export async function refresh(
     res.cookie('refreshToken', newRefreshToken, {
       httpOnly: true,
       secure: env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/',
     });
@@ -557,7 +560,7 @@ export async function verifyMagicLink(
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/',
     });
