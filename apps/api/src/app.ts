@@ -16,6 +16,7 @@ import codeRoutes from './routes/code';
 import uploadRoutes from './routes/upload';
 import magicLinkRoutes from './routes/magicLink';
 import livekitRoutes from './routes/livekit';
+import passport from './config/passport';
 
 const app = express();
 
@@ -41,6 +42,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Cookie parsing
 app.use(cookieParser());
+
+// Passport init
+app.use(passport.initialize());
 
 // Routes
 app.use(healthRoutes);

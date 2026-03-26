@@ -9,6 +9,7 @@ import {
   ForgotPasswordPage,
   ResetPasswordPage,
   OnboardingPage,
+  AuthCallbackPage,
 } from '@/features/auth';
 import { DashboardPage } from '@/features/dashboard';
 import { AIRoomPage, EvaluationReportPage } from '@/features/ai-room';
@@ -88,10 +89,8 @@ export default function App() {
         <Route path="/onboarding" element={<OnboardingPage />} />
 
         {/* Auth callback (magic link / Google OAuth) */}
-        <Route path="/auth/callback" element={<PlaceholderPage title="Authenticating..." />} />
+        <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/auth/magic" element={<PlaceholderPage title="Signing in..." />} />
-
-        {/* Peer room join (public — supports guests) */}
         <Route path="/room/:inviteCode" element={<JoinRoomPage />} />
 
         {/* Protected routes (inside app layout + auth guard) */}
@@ -103,6 +102,27 @@ export default function App() {
           }
         >
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/ai-room" element={
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="w-16 h-16 rounded-full bg-accent-dim flex items-center justify-center mb-6">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z" />
+                  <path d="M16 14H8a4 4 0 0 0-4 4v2h16v-2a4 4 0 0 0-4-4z" />
+                </svg>
+              </div>
+              <h2 className="text-display text-text-primary font-sans mb-3">AI Interview Simulator</h2>
+              <p className="text-body text-text-secondary mb-8 max-w-md text-center">
+                Practice realistic technical and behavioral interviews with an AI interviewer. Get detailed feedback on your performance.
+              </p>
+              <button 
+                onClick={() => document.dispatchEvent(new CustomEvent('open-new-session'))}
+                className="px-6 py-3 bg-accent text-text-inverse rounded-md font-medium hover:bg-[#00BBDF] transition-colors"
+                style={{ cursor: 'pointer' }}
+              >
+                Start New Session
+              </button>
+            </div>
+          } />
           <Route path="/ai-room/:sessionId" element={<AIRoomPage />} />
           <Route path="/ai-room/:sessionId/report" element={<EvaluationReportPage />} />
           <Route path="/peer-room" element={<PeerRoomPage />} />

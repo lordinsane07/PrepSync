@@ -28,7 +28,14 @@ export default function AppLayout() {
     }
     handleResize();
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+
+    const handleOpenModal = () => setShowSessionConfig(true);
+    document.addEventListener('open-new-session', handleOpenModal);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('open-new-session', handleOpenModal);
+    };
   }, []);
 
   const pageTitle =

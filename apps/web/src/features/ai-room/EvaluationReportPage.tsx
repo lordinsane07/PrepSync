@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ScoreRing, Button, Badge, ReadinessBar } from '@/components/ui';
+import { ScoreRing, Button, Badge, Spinner } from '@/components/ui';
 import { PageWrapper } from '@/components/layout';
 import type { Domain, Difficulty } from '@prepsync/shared';
 import { DOMAIN_LABELS, DIFFICULTY_LABELS } from '@prepsync/shared';
+import api from '@/services/api';
 
 interface EvaluationReport {
   overallScore: number;
@@ -49,11 +51,51 @@ export default function EvaluationReportPage() {
     difficulty: Difficulty;
   } | null;
 
-  if (!state?.evaluationReport) {
+  const [reportState, setReportState] = useState(state);
+  const [isLoading, setIsLoading] = useState(!state?.evaluationReport);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!reportState?.evaluationReport && sessionId) {
+      setIsLoading(true);
+      api.get(`/sessions/${sessionId}`)
+        .then((res) => {
+          const session = res.data;
+          if (session.evaluationReport) {
+            setReportState({
+              evaluationReport: session.evaluationReport,
+              domain: session.domain,
+              difficulty: session.difficulty,
+            });
+          } else {
+            setError(session.status === 'active' ? 'Session is still active' : 'Report not found for this session.');
+          }
+        })
+        .catch(() => {
+          setError('Failed to load report.');
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  }, [sessionId, reportState]);
+
+  if (isLoading) {
     return (
       <PageWrapper>
         <div className="flex flex-col items-center justify-center py-20">
-          <p className="text-body text-text-muted">Report not found.</p>
+          <Spinner size="lg" className="mb-4" />
+          <p className="text-body text-text-muted">Loading your report...</p>
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  if (error || !reportState?.evaluationReport) {
+    return (
+      <PageWrapper>
+        <div className="flex flex-col items-center justify-center py-20">
+          <p className="text-body text-text-muted mb-4">{error || 'Report not found.'}</p>
           <Button onClick={() => navigate('/dashboard')} className="mt-4">
             Back to Dashboard
           </Button>
@@ -62,7 +104,7 @@ export default function EvaluationReportPage() {
     );
   }
 
-  const { evaluationReport: report, domain, difficulty } = state;
+  const { evaluationReport: report, domain, difficulty } = reportState;
 
   return (
     <div className="min-h-screen bg-bg-base">
@@ -85,7 +127,7 @@ export default function EvaluationReportPage() {
 
         {/* Score Ring + Overall */}
         <div className="bg-bg-surface border border-border-subtle rounded-lg p-8 mb-6 flex items-center gap-8">
-          <ScoreRing value={report.overallScore} size={140} />
+          <ScoreRing score={report.overallScore} size={140} />
           <div>
             <p className="text-[40px] leading-none font-mono font-semibold text-text-primary">
               {report.overallScore}<span className="text-heading text-text-muted">/100</span>

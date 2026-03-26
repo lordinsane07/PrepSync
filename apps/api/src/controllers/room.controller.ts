@@ -36,15 +36,16 @@ export async function createRoom(
     const user = req.user;
     if (!user) throw ApiError.unauthorized();
 
+    const u = user as any;
     const inviteCode = await uniqueInviteCode();
 
     const room = await Room.create({
       inviteCode,
-      createdBy: user._id,
+      createdBy: u._id,
       participants: [
         {
-          userId: user._id,
-          displayName: user.name,
+          userId: u._id,
+          displayName: u.name,
           role: 'interviewer',
           isGuest: false,
           joinedAt: new Date(),
@@ -108,6 +109,8 @@ export async function joinRoom(
     const { displayName } = req.body as { displayName?: string };
     const user = req.user; // May be undefined for guests (optionalAuth)
 
+    const u = user as any;
+
     const room = await Room.findById(id);
     if (!room) throw ApiError.notFound('Room not found');
 
@@ -115,28 +118,37 @@ export async function joinRoom(
       throw ApiError.badRequest('This room has already ended');
     }
 
-    if (room.participants.length >= 2) {
-      throw ApiError.badRequest('Room is full (max 2 participants)');
-    }
-
     // Check if user is already in the room
-    if (user) {
+    if (u) {
       const alreadyIn = room.participants.some(
-        (p) => p.userId && p.userId.toString() === user._id.toString(),
+        (p) => p.userId && p.userId.toString() === u._id.toString(),
       );
       if (alreadyIn) {
-        res.json({ roomId: room._id, message: 'Already in room' });
+        res.json({
+          roomId: room._id,
+          inviteCode: room.inviteCode,
+          status: room.status,
+          participants: room.participants.map((p) => ({
+            displayName: p.displayName,
+            role: p.role,
+            isGuest: p.isGuest,
+          })),
+        });
         return;
       }
     }
 
-    const name = user?.name || displayName;
+    if (room.participants.length >= 2) {
+      throw ApiError.badRequest('Room is full (max 2 participants)');
+    }
+
+    const name = u?.name || displayName;
     if (!name) {
       throw ApiError.badRequest('displayName is required for guest users');
     }
 
     room.participants.push({
-      userId: user?._id,
+      userId: u?._id,
       displayName: name,
       role: 'candidate',
       isGuest: !user,
@@ -173,6 +185,7 @@ export async function endRoom(
 ): Promise<void> {
   try {
     const user = req.user;
+    const u = user as any;
     const { id } = req.params;
 
     const room = await Room.findById(id);
@@ -183,9 +196,9 @@ export async function endRoom(
     }
 
     // Only participants can end the room
-    if (user) {
+    if (u) {
       const isParticipant = room.participants.some(
-        (p) => p.userId && p.userId.toString() === user._id.toString(),
+        (p) => p.userId && p.userId.toString() === u._id.toString(),
       );
       if (!isParticipant) {
         throw ApiError.forbidden('You are not a participant of this room');

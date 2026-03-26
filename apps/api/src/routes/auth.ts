@@ -11,7 +11,9 @@ import {
   sendMagicLink,
   verifyMagicLink,
   completeOnboarding,
+  googleCallback,
 } from '../controllers/auth.controller';
+import passport from '../config/passport';
 import { requireAuth } from '../middleware/auth';
 import {
   loginLimiter,
@@ -41,9 +43,9 @@ router.post('/auth/reset-password', resetPassword);
 router.post('/auth/magic-link', sendMagicLink);
 router.get('/auth/magic', verifyMagicLink);
 
-// Google OAuth (will be added when configured)
-// router.get('/auth/google', passport.authenticate('google', { scope: ['openid', 'email', 'profile'] }));
-// router.get('/auth/google/callback', passport.authenticate('google', { session: false }), googleCallback);
+// Google OAuth
+router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+router.get('/auth/google/callback', passport.authenticate('google', { session: false }), googleCallback);
 
 // Onboarding (requires auth)
 router.post('/auth/onboarding', requireAuth, completeOnboarding);

@@ -53,7 +53,7 @@ export default function PeerRoomPage() {
 
   // Socket.io lifecycle for active room
   useEffect(() => {
-    if (view === 'active' && roomId) {
+    if ((view === 'active' || view === 'lobby') && roomId) {
       const socket = connectSocket();
       socketJoinRoom(roomId, user?.name || 'User');
 
@@ -68,6 +68,11 @@ export default function PeerRoomPage() {
           displayName: 'System',
           timestamp: new Date().toISOString(),
         }]);
+        
+        // If we are waiting in the lobby and someone joins, refresh the room to move to 'active' view
+        if (view === 'lobby' && inviteCode) {
+          handleLookupRoom(inviteCode);
+        }
       });
 
       socket.on('room:user-left', (data) => {
@@ -86,7 +91,7 @@ export default function PeerRoomPage() {
         socket.off('room:user-left');
       };
     }
-  }, [view, roomId, user?.name]);
+  }, [view, roomId, user?.name, inviteCode]);
 
   // Auto-scroll chat
   useEffect(() => {

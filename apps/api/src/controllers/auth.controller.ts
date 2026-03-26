@@ -579,7 +579,7 @@ export async function completeOnboarding(
   next: NextFunction,
 ): Promise<void> {
   try {
-    const user = req.user;
+    const user = req.user as any;
     if (!user) {
       throw ApiError.unauthorized();
     }
@@ -597,6 +597,49 @@ export async function completeOnboarding(
     await user.save();
 
     res.json({ user: user.toJSON() });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ===== GET /auth/google/callback =====
+export async function googleCallback(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const user = req.user as any;
+    if (!user) {
+      throw ApiError.unauthorized('Google authentication failed');
+    }
+
+    // Generate tokens
+    const accessToken = generateAccessToken({ userId: String(user._id), email: user.email });
+    const refreshToken = generateRefreshToken();
+    const refreshTokenHash = await hashToken(refreshToken);
+
+    user.refreshTokens.push({
+      tokenHash: refreshTokenHash,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      deviceInfo: req.headers['user-agent'] || 'unknown',
+      ipAddress: req.ip || 'unknown',
+      createdAt: new Date(),
+    });
+
+    user.lastActiveDate = new Date();
+    await user.save();
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/',
+    });
+
+    // Redirect to frontend callback page
+    res.redirect(`${env.CLIENT_URL}/auth/callback?token=${accessToken}`);
   } catch (error) {
     next(error);
   }
