@@ -11,6 +11,7 @@ import {
   type RoomParticipant,
 } from '@/services/room.service';
 import { useAuthStore } from '@/stores/authStore';
+import { submitCode } from '@/services/code.service';
 import {
   connectSocket,
   joinRoom as socketJoinRoom,
@@ -183,14 +184,34 @@ export default function PeerRoomPage() {
     }
   };
 
-  const handleRunCode = (_code: string, language: string) => {
+  const handleRunCode = async (code: string, language: string) => {
     setIsRunning(true);
-    setCodeOutput('Running...');
-    // Simulate code execution (Judge0 API integration placeholder)
-    setTimeout(() => {
-      setCodeOutput(`> Code executed successfully\n> Language: ${language}\n> Output will appear here when Judge0 is connected.`);
+    setCodeOutput('> Sending to Judge0 servers...');
+    
+    try {
+      const result = await submitCode(code, language);
+      let out = `=== Status: ${result.status} ===\n`;
+      if (result.time) out += `Time: ${result.time}s | Memory: ${result.memory}KB\n\n`;
+      
+      if (result.compileOutput) {
+        out += `--- Compilation ---\n${result.compileOutput}\n\n`;
+      }
+      if (result.stderr) {
+        out += `--- Error ---\n${result.stderr}\n\n`;
+      }
+      if (result.stdout) {
+        out += `--- Output ---\n${result.stdout}\n`;
+      }
+      if (!result.stdout && !result.stderr && !result.compileOutput) {
+        out += `(No output generated)`;
+      }
+      
+      setCodeOutput(out);
+    } catch (err: unknown) {
+      setCodeOutput(`> Execution failed:\n${err instanceof Error ? err.message : String(err)}`);
+    } finally {
       setIsRunning(false);
-    }, 1500);
+    }
   };
 
   const myRole = participants.find(

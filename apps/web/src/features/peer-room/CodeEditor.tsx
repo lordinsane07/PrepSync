@@ -1,7 +1,12 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import Editor, { type OnMount } from '@monaco-editor/react';
 import { Button } from '@/components/ui';
 import { clsx } from 'clsx';
+import * as Y from 'yjs';
+import { MonacoBinding } from 'y-monaco';
+import { getSocket } from '@/services/socket';
+import { YjsSocketProvider } from '@/services/yjsSocketProvider';
+import { useAuthStore } from '@/stores/authStore';
 
 interface CodeEditorProps {
   roomId: string;
@@ -32,24 +37,88 @@ const DEFAULT_CODE: Record<string, string> = {
   rust: '// Write your solution here\nfn main() {\n    \n}\n',
 };
 
+// Random bright colors for cursors
+const USER_COLORS = ['#30bced', '#6eeb83', '#ffbc42', '#ecd444', '#ee6352', '#9ac2c9', '#8acb88', '#1be7ff'];
+
 export default function CodeEditor({ roomId, onRunCode, isRunning, output }: CodeEditorProps) {
+  const user = useAuthStore((s) => s.user);
   const [language, setLanguage] = useState('javascript');
-  const [code, setCode] = useState(DEFAULT_CODE.javascript);
   const editorRef = useRef<any>(null);
+  const ydocRef = useRef<Y.Doc | null>(null);
+  const providerRef = useRef<YjsSocketProvider | null>(null);
+  const bindingRef = useRef<MonacoBinding | null>(null);
+
+  // Initialize Yjs and socket provider
+  useEffect(() => {
+    const doc = new Y.Doc();
+    ydocRef.current = doc;
+
+    const socket = getSocket();
+    const provider = new YjsSocketProvider(socket, roomId, doc);
+    providerRef.current = provider;
+
+    // Set local cursor awareness state
+    const myColor = USER_COLORS[Math.floor(Math.random() * USER_COLORS.length)];
+    provider.awareness.setLocalStateField('user', {
+      name: user?.name || 'Guest',
+      color: myColor,
+    });
+
+    // Sync active language via Yjs Map
+    const configMap = doc.getMap('config');
+    const updateLocalLanguage = () => {
+      const syncedLang = configMap.get('language') as string;
+      if (syncedLang && syncedLang !== language) {
+        setLanguage(syncedLang);
+      }
+    };
+    configMap.observe(updateLocalLanguage);
+
+    return () => {
+      if (bindingRef.current) bindingRef.current.destroy();
+      provider.destroy();
+      doc.destroy();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId, user?.name]);
 
   const handleEditorMount: OnMount = (editor) => {
     editorRef.current = editor;
+
+    if (ydocRef.current && providerRef.current) {
+      const type = ydocRef.current.getText('monaco');
+      
+      // If room is totally fresh, inject default JS code silently
+      if (type.length === 0) {
+        type.insert(0, DEFAULT_CODE.javascript);
+      }
+
+      const model = editor.getModel();
+      if (model) {
+        bindingRef.current = new MonacoBinding(
+          type,
+          model,
+          new Set([editor]),
+          providerRef.current.awareness
+        );
+      }
+    }
+
     editor.focus();
   };
 
   const handleLanguageChange = useCallback((lang: string) => {
     setLanguage(lang);
-    setCode(DEFAULT_CODE[lang] || '');
+    if (ydocRef.current) {
+      ydocRef.current.getMap('config').set('language', lang);
+    }
   }, []);
 
   const handleRun = () => {
-    if (onRunCode) {
-      onRunCode(code, language);
+    if (onRunCode && editorRef.current) {
+      // Pull latest text directly from Monaco
+      const currentCode = editorRef.current.getValue();
+      onRunCode(currentCode, language);
     }
   };
 
@@ -82,8 +151,6 @@ export default function CodeEditor({ roomId, onRunCode, isRunning, output }: Cod
           <Editor
             height="100%"
             language={language}
-            value={code}
-            onChange={(value) => setCode(value || '')}
             onMount={handleEditorMount}
             theme="vs-dark"
             options={{
