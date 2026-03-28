@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { setAccessToken } from '../services/api';
 import * as authService from '../services/auth.service';
 
+let refreshPromise: Promise<void> | null = null;
+
 interface User {
   _id: string;
   name: string;
@@ -88,19 +90,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   refreshAuth: async () => {
-    try {
-      set({ isLoading: true });
-      await authService.refreshToken();
-      // After refresh, fetch user profile
-      const user = await authService.getMe();
-      set({
-        user: user as unknown as User,
-        isAuthenticated: true,
-        isLoading: false,
-      });
-    } catch {
-      set({ user: null, isAuthenticated: false, isLoading: false });
-    }
+    if (refreshPromise) return refreshPromise;
+
+    refreshPromise = (async () => {
+      try {
+        set({ isLoading: true });
+        await authService.refreshToken();
+        // After refresh, fetch user profile
+        const user = await authService.getMe();
+        set({
+          user: user as unknown as User,
+          isAuthenticated: true,
+          isLoading: false,
+        });
+      } catch {
+        set({ user: null, isAuthenticated: false, isLoading: false });
+      } finally {
+        refreshPromise = null;
+      }
+    })();
+
+    return refreshPromise;
   },
 
   completeOnboarding: async (goal, targetDomains, weeklyGoal) => {

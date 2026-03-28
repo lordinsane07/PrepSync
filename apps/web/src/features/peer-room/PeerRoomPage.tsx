@@ -46,9 +46,10 @@ export default function PeerRoomPage() {
 
   // If URL has an invite code, fetch room details
   useEffect(() => {
-    if (urlCode) {
+    if (urlCode && urlCode !== inviteCode) {
       handleLookupRoom(urlCode);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlCode]);
 
   // Socket.io lifecycle for active room
@@ -84,11 +85,16 @@ export default function PeerRoomPage() {
         }]);
       });
 
+      socket.on('room:ended', () => {
+        setView('ended');
+      });
+
       return () => {
         socketLeaveRoom(roomId);
         socket.off('room:message');
         socket.off('room:user-joined');
         socket.off('room:user-left');
+        socket.off('room:ended');
       };
     }
   }, [view, roomId, user?.name, inviteCode]);
@@ -109,6 +115,7 @@ export default function PeerRoomPage() {
         { displayName: user?.name || 'You', role: 'interviewer', isGuest: false },
       ]);
       setView('lobby');
+      navigate(`/peer-room/${result.inviteCode}`, { replace: true });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to create room');
     } finally {
@@ -144,6 +151,7 @@ export default function PeerRoomPage() {
       setView('ended');
     } catch {
       setEnding(false);
+      setView('ended');
     }
   };
 
@@ -514,7 +522,7 @@ export default function PeerRoomPage() {
           <Button variant="ghost" onClick={() => navigate('/history')}>
             View History
           </Button>
-          <Button onClick={() => { setView('create'); setRoomId(''); setInviteCode(''); setParticipants([]); }}>
+          <Button onClick={() => { setView('create'); setRoomId(''); setInviteCode(''); setParticipants([]); navigate('/peer-room'); }}>
             New Room
           </Button>
         </div>

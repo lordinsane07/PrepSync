@@ -13,6 +13,7 @@ export default function VerifyEmailPage() {
 
   const userId = (location.state as { userId?: string })?.userId;
   const email = (location.state as { email?: string })?.email;
+  const redirect = (location.state as { redirect?: string })?.redirect;
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [isLoading, setIsLoading] = useState(false);
@@ -91,7 +92,7 @@ export default function VerifyEmailPage() {
 
     try {
       await verifyAction(userId, otpStr);
-      navigate('/onboarding');
+      navigate(redirect || '/onboarding');
     } catch (err: unknown) {
       const error = err as { response?: { data?: { error?: string } } };
       setError(error.response?.data?.error || 'Invalid verification code');

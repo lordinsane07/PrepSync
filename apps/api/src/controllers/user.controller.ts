@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ApiError } from '../middleware/error';
+import Session from '../models/Session';
 
 // ===== GET /users/me =====
 export async function getMe(
@@ -12,7 +13,7 @@ export async function getMe(
     if (!user) {
       throw ApiError.unauthorized();
     }
-    res.json(user.toJSON());
+    res.json((user as any).toJSON());
   } catch (error) {
     next(error);
   }
@@ -45,8 +46,42 @@ export async function updateMe(
       }
     }
 
-    await user.save();
-    res.json(user.toJSON());
+    await (user as any).save();
+    res.json((user as any).toJSON());
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ===== GET /users/me/activity =====
+export async function getActivity(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const user = req.user;
+    if (!user) throw ApiError.unauthorized();
+
+    const oneYearAgo = new Date();
+    oneYearAgo.setDate(oneYearAgo.getDate() - 365);
+
+    const activity = await Session.aggregate([
+      { $match: { userId: (user as any)._id, startedAt: { $gte: oneYearAgo } } },
+      { 
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$startedAt" } },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const result: Record<string, number> = {};
+    for (const item of activity) {
+      result[item._id] = item.count;
+    }
+
+    res.json(result);
   } catch (error) {
     next(error);
   }

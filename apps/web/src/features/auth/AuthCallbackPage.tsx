@@ -16,7 +16,9 @@ export default function AuthCallbackPage() {
       setAccessToken(token);
       refreshAuth()
         .then(() => {
-          navigate('/dashboard', { replace: true });
+          const redirect = localStorage.getItem('authRedirect');
+          if (redirect) localStorage.removeItem('authRedirect');
+          navigate(redirect || '/dashboard', { replace: true });
         })
         .catch(() => {
           navigate('/login', { replace: true });

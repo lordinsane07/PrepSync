@@ -192,7 +192,12 @@ export async function endRoom(
     if (!room) throw ApiError.notFound('Room not found');
 
     if (room.status === 'ended') {
-      throw ApiError.badRequest('Room is already ended');
+      res.json({
+        roomId: room._id,
+        status: 'ended',
+        endedAt: room.endedAt,
+      });
+      return;
     }
 
     // Only participants can end the room
@@ -208,6 +213,14 @@ export async function endRoom(
     room.status = 'ended';
     room.endedAt = new Date();
     await room.save();
+
+    try {
+      // Use dynamic import or require to avoid circular dependency if getIO is imported at top
+      const { getIO } = require('../socket/socketHandler');
+      getIO().to(`room:${room._id}`).emit('room:ended');
+    } catch (e) {
+      console.error('Failed to emit room:ended via socket', e);
+    }
 
     res.json({
       roomId: room._id,
@@ -235,7 +248,15 @@ export async function switchRole(
     if (!room) throw ApiError.notFound('Room not found');
 
     if (room.status !== 'active') {
-      throw ApiError.badRequest('Room is not active');
+      res.json({
+        roomId: room._id,
+        participants: room.participants.map((p) => ({
+          displayName: p.displayName,
+          role: p.role,
+          isGuest: p.isGuest,
+        })),
+      });
+      return;
     }
 
     // Swap roles for all participants

@@ -10,14 +10,14 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const DAYS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
 
 function getIntensity(count: number): string {
-  if (count === 0) return 'bg-bg-elevated';
-  if (count === 1) return 'bg-accent/20';
-  if (count === 2) return 'bg-accent/40';
-  if (count <= 4) return 'bg-accent/60';
-  return 'bg-accent';
+  if (count === 0) return 'bg-bg-elevated opacity-100';
+  if (count === 1) return 'bg-accent opacity-20';
+  if (count === 2) return 'bg-accent opacity-40';
+  if (count <= 4) return 'bg-accent opacity-60';
+  return 'bg-accent opacity-100';
 }
 
-export default function ActivityHeatmap({ data = {}, weeks = 20 }: ActivityHeatmapProps) {
+export default function ActivityHeatmap({ data = {}, weeks = 52 }: ActivityHeatmapProps) {
   const { grid, monthLabels, totalSessions, currentStreak } = useMemo(() => {
     const today = new Date();
     const totalDays = weeks * 7;
@@ -85,7 +85,7 @@ export default function ActivityHeatmap({ data = {}, weeks = 20 }: ActivityHeatm
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto pb-2">
         <div className="inline-flex flex-col gap-0">
           {/* Month labels */}
           <div className="flex ml-8 mb-1">
@@ -105,7 +105,7 @@ export default function ActivityHeatmap({ data = {}, weeks = 20 }: ActivityHeatm
             {/* Day labels */}
             <div className="flex flex-col gap-[2px] mr-1">
               {DAYS.map((d, i) => (
-                <span key={i} className="text-[9px] text-text-muted font-sans h-[12px] flex items-center">
+                <span key={i} className="text-[9px] text-text-muted font-sans h-[12px] flex items-center pr-2">
                   {d}
                 </span>
               ))}
@@ -118,7 +118,7 @@ export default function ActivityHeatmap({ data = {}, weeks = 20 }: ActivityHeatm
                   {week.map((day, di) => (
                     <div
                       key={di}
-                      className={`w-[12px] h-[12px] rounded-[2px] ${getIntensity(day.count)} transition-colors`}
+                      className={`w-[12px] h-[12px] rounded-[2px] ${getIntensity(day.count)} transition-colors hover:border hover:border-text-primary`}
                       title={`${day.date}: ${day.count} session${day.count !== 1 ? 's' : ''}`}
                     />
                   ))}
@@ -128,13 +128,13 @@ export default function ActivityHeatmap({ data = {}, weeks = 20 }: ActivityHeatm
           </div>
 
           {/* Legend */}
-          <div className="flex items-center justify-end gap-1 mt-2">
+          <div className="flex items-center justify-end gap-1 mt-3">
             <span className="text-[9px] text-text-muted font-sans mr-1">Less</span>
-            <div className="w-[10px] h-[10px] rounded-[2px] bg-bg-elevated" />
-            <div className="w-[10px] h-[10px] rounded-[2px] bg-accent/20" />
-            <div className="w-[10px] h-[10px] rounded-[2px] bg-accent/40" />
-            <div className="w-[10px] h-[10px] rounded-[2px] bg-accent/60" />
-            <div className="w-[10px] h-[10px] rounded-[2px] bg-accent" />
+            <div className="w-[12px] h-[12px] rounded-[2px] bg-bg-elevated opacity-100" />
+            <div className="w-[12px] h-[12px] rounded-[2px] bg-accent opacity-20" />
+            <div className="w-[12px] h-[12px] rounded-[2px] bg-accent opacity-40" />
+            <div className="w-[12px] h-[12px] rounded-[2px] bg-accent opacity-60" />
+            <div className="w-[12px] h-[12px] rounded-[2px] bg-accent opacity-100" />
             <span className="text-[9px] text-text-muted font-sans ml-1">More</span>
           </div>
         </div>

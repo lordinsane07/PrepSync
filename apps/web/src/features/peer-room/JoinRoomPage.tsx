@@ -41,16 +41,9 @@ export default function JoinRoomPage() {
     setJoining(true);
     setError('');
     try {
-      const result = await joinRoom(roomId, isAuthenticated ? undefined : guestName);
-      // Navigate to the peer room page in active state
-      navigate('/peer-room', {
-        state: {
-          roomId: result.roomId,
-          inviteCode,
-          participants: result.participants,
-          status: result.status,
-        },
-      });
+      await joinRoom(roomId, isAuthenticated ? undefined : guestName);
+      // Navigate to the persistent peer room page URL
+      navigate(`/peer-room/${inviteCode}`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to join room');
     } finally {

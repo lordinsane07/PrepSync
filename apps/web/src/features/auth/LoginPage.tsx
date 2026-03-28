@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Input } from '@/components/ui';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect');
   const loginAction = useAuthStore((s) => s.login);
 
   const [email, setEmail] = useState('');
@@ -27,7 +29,7 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await loginAction(email, password, rememberMe);
-      navigate('/dashboard');
+      navigate(redirect || '/dashboard');
     } catch (err: unknown) {
       const error = err as { response?: { data?: { error?: string; code?: string } } };
       const code = error.response?.data?.code;
@@ -127,7 +129,10 @@ export default function LoginPage() {
               {/* Google OAuth */}
               <button
                 type="button"
-                onClick={() => { window.location.href = '/api/auth/google'; }}
+                onClick={() => {
+                  if (redirect) localStorage.setItem('authRedirect', redirect);
+                  window.location.href = '/api/auth/google';
+                }}
                 className="w-full flex items-center justify-center gap-3 px-5 py-[10px] border border-border-default rounded-md text-body text-text-primary font-sans hover:bg-bg-overlay transition-colors mb-6"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24">
@@ -193,7 +198,7 @@ export default function LoginPage() {
 
           <p className="text-body text-text-secondary mt-6 text-center">
             Don't have an account?{' '}
-            <Link to="/signup" className="text-accent hover:underline">Sign up</Link>
+            <Link to={`/signup${redirect ? '?redirect=' + encodeURIComponent(redirect) : ''}`} className="text-accent hover:underline">Sign up</Link>
           </p>
         </div>
       </div>

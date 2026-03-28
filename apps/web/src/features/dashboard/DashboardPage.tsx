@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { PageWrapper } from '@/components/layout';
 import MetricCard from './MetricCard';
 import WeaknessRadar from './WeaknessRadar';
@@ -6,6 +7,7 @@ import DomainReadiness from './DomainReadiness';
 import RecentSessionsTable, { type SessionRow } from './RecentSessionsTable';
 import ActivityHeatmap from './ActivityHeatmap';
 import { useAuthStore } from '@/stores/authStore';
+import { getUserActivity } from '@/services/auth.service';
 import type { Domain } from '@prepsync/shared';
 
 // === Mock data (replaced with real API data later) ===
@@ -29,6 +31,19 @@ const MOCK_SESSIONS: SessionRow[] = [
 export default function DashboardPage() {
   const userName = useAuthStore((s) => s.user?.name || 'User');
   const firstName = userName.split(' ')[0];
+  const [activityData, setActivityData] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    async function fetchActivity() {
+      try {
+        const data = await getUserActivity();
+        setActivityData(data);
+      } catch (err) {
+        console.error('Failed to fetch activity data', err);
+      }
+    }
+    fetchActivity();
+  }, []);
 
   return (
     <PageWrapper>
@@ -123,7 +138,7 @@ export default function DashboardPage() {
 
       {/* Row 4: Activity Heatmap */}
       <div className="bg-bg-surface border border-border-subtle rounded-lg p-6 mb-6">
-        <ActivityHeatmap />
+        <ActivityHeatmap data={activityData} />
       </div>
 
       {/* Row 5: Recent Sessions Table */}

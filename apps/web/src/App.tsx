@@ -126,6 +126,7 @@ export default function App() {
           <Route path="/ai-room/:sessionId" element={<AIRoomPage />} />
           <Route path="/ai-room/:sessionId/report" element={<EvaluationReportPage />} />
           <Route path="/peer-room" element={<PeerRoomPage />} />
+          <Route path="/peer-room/:inviteCode" element={<PeerRoomPage />} />
           <Route path="/groups" element={<DomainGroupsPage />} />
           <Route path="/groups/:groupId" element={<DomainGroupsPage />} />
           <Route path="/dms" element={<DMsPage />} />

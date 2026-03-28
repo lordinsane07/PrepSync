@@ -93,3 +93,8 @@ export async function getMe(): Promise<Record<string, unknown>> {
   const { data } = await api.get('/users/me');
   return data;
 }
+
+export async function getUserActivity(): Promise<Record<string, number>> {
+  const { data } = await api.get('/users/me/activity');
+  return data;
+}
