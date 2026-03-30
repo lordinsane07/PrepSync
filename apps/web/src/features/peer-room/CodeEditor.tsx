@@ -26,16 +26,6 @@ const LANGUAGES = [
   { value: 'rust', label: 'Rust', id: 73 },
 ];
 
-const DEFAULT_CODE: Record<string, string> = {
-  javascript: '// Write your solution here\nfunction solve(input) {\n  \n}\n',
-  typescript: '// Write your solution here\nfunction solve(input: string): string {\n  \n}\n',
-  python: '# Write your solution here\ndef solve(input):\n    pass\n',
-  java: '// Write your solution here\nclass Solution {\n    public static void main(String[] args) {\n        \n    }\n}\n',
-  cpp: '// Write your solution here\n#include <iostream>\nusing namespace std;\n\nint main() {\n    \n    return 0;\n}\n',
-  c: '// Write your solution here\n#include <stdio.h>\n\nint main() {\n    \n    return 0;\n}\n',
-  go: '// Write your solution here\npackage main\n\nimport "fmt"\n\nfunc main() {\n    fmt.Println("Hello")\n}\n',
-  rust: '// Write your solution here\nfn main() {\n    \n}\n',
-};
 
 // Random bright colors for cursors
 const USER_COLORS = ['#30bced', '#6eeb83', '#ffbc42', '#ecd444', '#ee6352', '#9ac2c9', '#8acb88', '#1be7ff'];
@@ -87,10 +77,12 @@ export default function CodeEditor({ roomId, onRunCode, isRunning, output }: Cod
 
     if (ydocRef.current && providerRef.current) {
       const type = ydocRef.current.getText('monaco');
+      const configMap = ydocRef.current.getMap('config');
       
-      // If room is totally fresh, inject default JS code silently
-      if (type.length === 0) {
-        type.insert(0, DEFAULT_CODE.javascript);
+      // Sync current language from shared state
+      const syncedLang = configMap.get('language') as string;
+      if (syncedLang) {
+        setLanguage(syncedLang);
       }
 
       const model = editor.getModel();
@@ -110,7 +102,8 @@ export default function CodeEditor({ roomId, onRunCode, isRunning, output }: Cod
   const handleLanguageChange = useCallback((lang: string) => {
     setLanguage(lang);
     if (ydocRef.current) {
-      ydocRef.current.getMap('config').set('language', lang);
+      const configMap = ydocRef.current.getMap('config');
+      configMap.set('language', lang);
     }
   }, []);
 

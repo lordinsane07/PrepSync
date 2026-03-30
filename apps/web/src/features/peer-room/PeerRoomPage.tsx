@@ -471,17 +471,18 @@ export default function PeerRoomPage() {
                 Whiteboard
               </button>
             </div>
-            <div className="flex-1 min-h-0">
-              {activePanel === 'editor' ? (
+            <div className="flex-1 min-h-0 relative">
+              <div className={clsx('absolute inset-0', activePanel === 'editor' ? 'flex flex-col' : 'hidden')}>
                 <CodeEditor
                   roomId={roomId}
                   onRunCode={handleRunCode}
                   isRunning={isRunning}
                   output={codeOutput}
                 />
-              ) : (
+              </div>
+              <div className={clsx('absolute inset-0', activePanel === 'whiteboard' ? 'flex flex-col' : 'hidden')}>
                 <Whiteboard roomId={roomId} />
-              )}
+              </div>
             </div>
           </div>
         </div>

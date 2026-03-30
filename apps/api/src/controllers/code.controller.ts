@@ -28,8 +28,8 @@ async function judge0Fetch(path: string, options: RequestInit = {}): Promise<any
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Judge0 error: ${res.status} ${text}`);
+    const text = await res.text().catch(() => 'Unknown error response');
+    throw ApiError.badRequest(`Judge0 error: ${res.status} ${text}`);
   }
 
   return res.json();
