@@ -1,39 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
 import { ApiError } from '../middleware/error';
 
-// Judge0 CE config — self-hosted or RapidAPI
-const JUDGE0_URL = process.env.JUDGE0_URL || 'https://judge0-ce.p.rapidapi.com';
-const JUDGE0_API_KEY = process.env.JUDGE0_API_KEY || '';
+// Wandbox API — free, no API key required
+const WANDBOX_URL = 'https://wandbox.org/api/compile.json';
 
-const LANGUAGE_IDS: Record<string, number> = {
-  javascript: 63,
-  typescript: 74,
-  python: 71,
-  java: 62,
-  cpp: 54,
-  c: 50,
-  go: 60,
-  rust: 73,
+// Map language names to Wandbox compiler identifiers
+const COMPILER_MAP: Record<string, { compiler: string; filename: string }> = {
+  javascript: { compiler: 'nodejs-20.17.0', filename: 'main.js' },
+  typescript: { compiler: 'typescript-5.6.2', filename: 'main.ts' },
+  python: { compiler: 'cpython-3.14.0', filename: 'main.py' },
+  java: { compiler: 'openjdk-jdk-22+36', filename: 'Main.java' },
+  cpp: { compiler: 'gcc-13.2.0', filename: 'main.cpp' },
+  c: { compiler: 'gcc-13.2.0-c', filename: 'main.c' },
+  go: { compiler: 'go-1.23.2', filename: 'main.go' },
+  rust: { compiler: 'rust-1.81.0', filename: 'main.rs' },
 };
-
-async function judge0Fetch(path: string, options: RequestInit = {}): Promise<any> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(JUDGE0_API_KEY ? { 'X-RapidAPI-Key': JUDGE0_API_KEY } : {}),
-  };
-
-  const res = await fetch(`${JUDGE0_URL}${path}`, {
-    ...options,
-    headers: { ...headers, ...(options.headers as Record<string, string> || {}) },
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => 'Unknown error response');
-    throw ApiError.badRequest(`Judge0 error: ${res.status} ${text}`);
-  }
-
-  return res.json();
-}
 
 // ===== POST /code/submit — Submit code for execution =====
 export async function submitCode(
@@ -52,27 +33,60 @@ export async function submitCode(
     };
 
     if (!sourceCode?.trim()) throw ApiError.badRequest('Source code is required');
-    if (!language || !LANGUAGE_IDS[language]) {
+    if (!language || !COMPILER_MAP[language]) {
       throw ApiError.badRequest('Unsupported language');
     }
 
-    const result = await judge0Fetch('/submissions?base64_encoded=false&wait=true', {
+    const { compiler, filename } = COMPILER_MAP[language];
+
+    const wandboxRes = await fetch(WANDBOX_URL, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        source_code: sourceCode,
-        language_id: LANGUAGE_IDS[language],
+        code: sourceCode,
+        compiler,
         stdin: stdin || '',
+        'compiler-option-raw': '',
+        'runtime-option-raw': '',
+        save: false,
       }),
     });
 
+    if (!wandboxRes.ok) {
+      const text = await wandboxRes.text().catch(() => 'Unknown error');
+      throw ApiError.badRequest(`Code execution service error: ${wandboxRes.status} ${text}`);
+    }
+
+    const result = await wandboxRes.json();
+
+    // Wandbox response fields:
+    //   status: exit code (0 = success)
+    //   signal: signal name if killed
+    //   compiler_output / compiler_error / compiler_message
+    //   program_output / program_error / program_message
+
+    const exitCode = Number(result.status ?? -1);
+    const isSuccess = exitCode === 0 && !result.signal;
+
+    let statusDesc = 'Unknown';
+    if (result.signal) {
+      statusDesc = `Runtime Error (${result.signal})`;
+    } else if (result.compiler_error) {
+      statusDesc = 'Compilation Error';
+    } else if (isSuccess) {
+      statusDesc = 'Accepted';
+    } else {
+      statusDesc = `Runtime Error (exit code ${exitCode})`;
+    }
+
     res.json({
-      token: result.token,
-      status: result.status?.description || 'Unknown',
-      stdout: result.stdout || '',
-      stderr: result.stderr || '',
-      compileOutput: result.compile_output || '',
-      time: result.time,
-      memory: result.memory,
+      token: '', // Wandbox is synchronous, no token needed
+      status: statusDesc,
+      stdout: result.program_output || '',
+      stderr: result.program_error || '',
+      compileOutput: result.compiler_message || result.compiler_output || '',
+      time: null,
+      memory: null,
     });
   } catch (error) {
     next(error);
@@ -80,6 +94,7 @@ export async function submitCode(
 }
 
 // ===== GET /code/status/:token — Poll for execution results =====
+// Wandbox is synchronous so this just returns a completed status
 export async function getSubmissionStatus(
   req: Request,
   res: Response,
@@ -89,19 +104,16 @@ export async function getSubmissionStatus(
     const user = req.user;
     if (!user) throw ApiError.unauthorized();
 
-    const { token } = req.params;
-    if (!token) throw ApiError.badRequest('Token is required');
-
-    const result = await judge0Fetch(`/submissions/${token}?base64_encoded=false`);
-
+    // With Wandbox, results are returned synchronously in submitCode.
+    // This endpoint is kept for API compatibility.
     res.json({
-      token: result.token,
-      status: result.status?.description || 'Unknown',
-      stdout: result.stdout || '',
-      stderr: result.stderr || '',
-      compileOutput: result.compile_output || '',
-      time: result.time,
-      memory: result.memory,
+      token: req.params.token || '',
+      status: 'Completed',
+      stdout: '',
+      stderr: '',
+      compileOutput: '',
+      time: null,
+      memory: null,
     });
   } catch (error) {
     next(error);
@@ -116,7 +128,10 @@ export async function getLanguages(
 ): Promise<void> {
   try {
     res.json({
-      languages: Object.entries(LANGUAGE_IDS).map(([name, id]) => ({ name, id })),
+      languages: Object.entries(COMPILER_MAP).map(([name, { compiler }]) => ({
+        name,
+        id: compiler,
+      })),
     });
   } catch (error) {
     next(error);
