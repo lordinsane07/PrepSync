@@ -8,6 +8,7 @@ interface SidebarProps {
   userAvatar?: string;
   readinessScore?: number;
   onNewSession?: () => void;
+  onToggle?: () => void;
   collapsed?: boolean;
 }
 
@@ -98,6 +99,7 @@ export default function Sidebar({
   userAvatar,
   readinessScore,
   onNewSession,
+  onToggle,
   collapsed = false,
 }: SidebarProps) {
   const location = useLocation();
@@ -109,10 +111,10 @@ export default function Sidebar({
         collapsed ? 'w-16' : 'w-60',
       )}
     >
-      {/* Logo */}
-      <div className={clsx('flex items-center px-5 h-16 border-b border-border-subtle', collapsed && 'justify-center px-0')}>
+      {/* Logo + Toggle */}
+      <div className={clsx('flex items-center h-16 border-b border-border-subtle shrink-0', collapsed ? 'flex-col justify-center gap-1 px-0' : 'justify-between px-5')}>
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-md bg-accent flex items-center justify-center">
+          <div className="w-7 h-7 rounded-md bg-accent flex items-center justify-center shrink-0">
             <span className="text-[11px] font-bold text-text-inverse font-mono">PS</span>
           </div>
           {!collapsed && (
@@ -121,6 +123,24 @@ export default function Sidebar({
             </span>
           )}
         </div>
+        {onToggle && (
+          <button
+            onClick={onToggle}
+            className={clsx(
+              'rounded-md flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-bg-overlay transition-colors',
+              collapsed ? 'w-7 h-7 mt-1' : 'w-8 h-8',
+            )}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <svg
+              width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s ease' }}
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* User info */}

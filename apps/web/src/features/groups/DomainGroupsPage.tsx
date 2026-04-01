@@ -47,6 +47,7 @@ export default function DomainGroupsPage() {
   const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState(['', '']);
   const [mainView, setMainView] = useState<'chat' | 'lounge' | 'call'>('chat');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -66,6 +67,14 @@ export default function DomainGroupsPage() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Notify AppLayout when entering/leaving call mode
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('group-call-mode', { detail: { active: mainView === 'call' } }));
+    return () => {
+      window.dispatchEvent(new CustomEvent('group-call-mode', { detail: { active: false } }));
+    };
+  }, [mainView]);
 
   const fetchGroups = async () => {
     try {
@@ -137,17 +146,45 @@ export default function DomainGroupsPage() {
   const handleGroupClick = (gId: string) => {
     setActiveGroup(gId);
     setMainView('chat');
+    setSidebarCollapsed(false);
     navigate(`/groups/${gId}`, { replace: true });
+  };
+
+  const handleViewChange = (view: 'chat' | 'lounge' | 'call') => {
+    setMainView(view);
+    if (view === 'call') {
+      setSidebarCollapsed(true);
+    } else {
+      setSidebarCollapsed(false);
+    }
   };
 
   const activeGroupInfo = groups.find((g) => g.groupId === activeGroup);
 
   return (
     <div className="h-[calc(100vh-48px)] flex">
-      {/* Left Panel — Group List */}
-      <div className="w-[280px] bg-bg-surface border-r border-border-subtle flex flex-col shrink-0">
-        <div className="p-4 border-b border-border-subtle">
-          <h2 className="text-heading text-text-primary font-sans font-semibold">Groups</h2>
+      {/* Left Panel — Group List (collapsible) */}
+      <div
+        className={clsx(
+          'bg-bg-surface border-r border-border-subtle flex flex-col shrink-0 transition-all duration-300 ease-in-out overflow-hidden',
+          sidebarCollapsed ? 'w-[64px]' : 'w-[280px]',
+        )}
+      >
+        <div className={clsx('border-b border-border-subtle flex items-center shrink-0', sidebarCollapsed ? 'p-2 justify-center' : 'p-4 justify-between')}>
+          {!sidebarCollapsed && (
+            <h2 className="text-heading text-text-primary font-sans font-semibold">Groups</h2>
+          )}
+          <button
+            onClick={() => setSidebarCollapsed((v) => !v)}
+            className="w-8 h-8 rounded-md flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-bg-overlay transition-colors"
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              style={{ transform: sidebarCollapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s ease' }}
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
         </div>
         <div className="flex-1 overflow-y-auto">
           {groups.map((group) => (
@@ -155,11 +192,13 @@ export default function DomainGroupsPage() {
               key={group.groupId}
               onClick={() => handleGroupClick(group.groupId)}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 transition-colors relative text-left',
+                'w-full flex items-center transition-colors relative text-left',
+                sidebarCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-3',
                 activeGroup === group.groupId
                   ? 'bg-bg-overlay'
                   : 'hover:bg-bg-overlay/50',
               )}
+              title={sidebarCollapsed ? (group.name || group.groupId) : undefined}
             >
               {activeGroup === group.groupId && (
                 <span
@@ -168,19 +207,21 @@ export default function DomainGroupsPage() {
                 />
               )}
               <div
-                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                className={clsx('rounded-full flex items-center justify-center shrink-0', sidebarCollapsed ? 'w-9 h-9' : 'w-10 h-10')}
                 style={{ backgroundColor: `${group.color}20` }}
               >
-                <span className="text-lg">{GROUP_ICONS[group.groupId] || '💬'}</span>
+                <span className={sidebarCollapsed ? 'text-base' : 'text-lg'}>{GROUP_ICONS[group.groupId] || '💬'}</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-body text-text-primary font-sans truncate">{group.name}</p>
-                {group.lastMessage && (
-                  <p className="text-caption text-text-muted font-sans truncate">
-                    {group.lastMessage.senderName}: {group.lastMessage.content}
-                  </p>
-                )}
-              </div>
+              {!sidebarCollapsed && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-body text-text-primary font-sans truncate">{group.name}</p>
+                  {group.lastMessage && (
+                    <p className="text-caption text-text-muted font-sans truncate">
+                      {group.lastMessage.senderName}: {group.lastMessage.content}
+                    </p>
+                  )}
+                </div>
+              )}
             </button>
           ))}
           {loadingGroups && (
@@ -215,21 +256,21 @@ export default function DomainGroupsPage() {
             <Button 
               size="sm" 
               variant={mainView === 'chat' ? 'primary' : 'secondary'} 
-              onClick={() => setMainView('chat')}
+              onClick={() => handleViewChange('chat')}
             >
               Chat
             </Button>
             <Button 
               size="sm" 
               variant={mainView === 'lounge' ? 'primary' : 'secondary'} 
-              onClick={() => setMainView('lounge')}
+              onClick={() => handleViewChange('lounge')}
             >
               Study Lounge
             </Button>
             <Button 
               size="sm" 
               variant={mainView === 'call' ? 'primary' : 'secondary'} 
-              onClick={() => setMainView('call')}
+              onClick={() => handleViewChange('call')}
             >
               Group Call
             </Button>

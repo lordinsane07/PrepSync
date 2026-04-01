@@ -18,13 +18,16 @@ const PAGE_TITLES: Record<string, string> = {
 export default function AppLayout() {
   const location = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [groupCallActive, setGroupCallActive] = useState(false);
   const [showSessionConfig, setShowSessionConfig] = useState(false);
   const user = useAuthStore((s) => s.user);
 
   // Auto-collapse sidebar on smaller screens
   useEffect(() => {
     function handleResize() {
-      setSidebarCollapsed(window.innerWidth < 1200);
+      if (!groupCallActive) {
+        setSidebarCollapsed(window.innerWidth < 1200);
+      }
     }
     handleResize();
     window.addEventListener('resize', handleResize);
@@ -36,6 +39,22 @@ export default function AppLayout() {
       window.removeEventListener('resize', handleResize);
       document.removeEventListener('open-new-session', handleOpenModal);
     };
+  }, [groupCallActive]);
+
+  // Listen for group-call-mode events to collapse/expand sidebar
+  useEffect(() => {
+    function handleCallMode(e: Event) {
+      const active = (e as CustomEvent).detail?.active ?? false;
+      setGroupCallActive(active);
+      if (active) {
+        setSidebarCollapsed(true);
+      } else {
+        // Restore based on screen width
+        setSidebarCollapsed(window.innerWidth < 1200);
+      }
+    }
+    window.addEventListener('group-call-mode', handleCallMode);
+    return () => window.removeEventListener('group-call-mode', handleCallMode);
   }, []);
 
   const pageTitle =
@@ -53,6 +72,7 @@ export default function AppLayout() {
         readinessScore={user?.readinessIndex?.overall}
         collapsed={sidebarCollapsed}
         onNewSession={() => setShowSessionConfig(true)}
+        onToggle={() => setSidebarCollapsed((v) => !v)}
       />
       <div
         className="transition-all duration-200"

@@ -108,3 +108,415 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════
+   Google Meet-style GroupCall Layout
+   ══════════════════════════════════════════════════════════ */
+
+/* Root wrapper — fills parent, removes LiveKit's default borders */
+.gc-root {
+  height: 100%;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #111318;
+}
+
+/* Stage: video + optional chat + controls stacked vertically */
+.gc-stage {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  flex-direction: row;
+}
+
+/* Video grid takes remaining space */
+.gc-video-area {
+  flex: 1 1 0%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a1d24;
+  border-radius: 12px;
+  margin: 8px;
+  margin-bottom: 72px; /* space for controls bar */
+  overflow: hidden;
+  position: relative;
+}
+
+/* — LiveKit GridLayout overrides inside video area — */
+.gc-video-area .lk-grid-layout {
+  gap: 8px !important;
+  padding: 8px !important;
+}
+
+/* Participant tile styling — rounded, subtle border */
+.gc-video-area .lk-participant-tile {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  border: 2px solid transparent !important;
+  transition: border-color 0.2s ease !important;
+  background: #111318 !important;
+}
+
+.gc-video-area .lk-participant-tile:hover {
+  border-color: rgba(0, 212, 255, 0.3) !important;
+}
+
+/* Speaking indicator */
+.gc-video-area .lk-participant-tile[data-lk-speaking="true"] {
+  border-color: var(--color-accent) !important;
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.15) !important;
+}
+
+/* Participant name bar at the bottom of tile */
+.gc-video-area .lk-participant-metadata,
+.gc-video-area .lk-participant-metadata-item {
+  background: linear-gradient(transparent, rgba(0,0,0,0.7)) !important;
+  font-family: 'DM Sans', sans-serif !important;
+}
+
+.gc-video-area .lk-participant-name {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #fff !important;
+}
+
+/* Placeholder (camera off) */
+.gc-video-area .lk-participant-placeholder {
+  background: #1a1d24 !important;
+}
+
+/* ─── Bottom Control Bar ─── */
+.gc-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  z-index: 20;
+  background: linear-gradient(transparent, rgba(17, 19, 24, 0.95) 30%);
+}
+
+.gc-controls-center {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.gc-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+/* Control buttons — Google Meet circle style */
+.gc-ctrl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 22px;
+  border: none;
+  background: #3c4043;
+  color: #e8eaed;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
+}
+
+.gc-ctrl-btn:hover {
+  background: #4a4e51;
+}
+
+.gc-ctrl-btn-subtle {
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.gc-ctrl-btn-subtle:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--color-text-primary);
+}
+
+.gc-ctrl-btn-active {
+  background: rgba(0, 212, 255, 0.15) !important;
+  color: var(--color-accent) !important;
+}
+
+/* Mic/Camera off state (LiveKit adds lk-muted data attribute) */
+.gc-ctrl-btn[data-lk-muted="true"],
+.gc-ctrl-btn.lk-button-toggle-off {
+  background: #ea4335;
+  color: #fff;
+}
+
+.gc-ctrl-btn[data-lk-muted="true"]:hover,
+.gc-ctrl-btn.lk-button-toggle-off:hover {
+  background: #d93025;
+}
+
+/* Leave button — red pill */
+.gc-leave-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 24px;
+  border-radius: 22px;
+  border: none;
+  background: #ea4335;
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.gc-leave-btn:hover {
+  background: #d93025;
+  transform: scale(1.03);
+}
+
+/* Participant count badge */
+.gc-participant-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-secondary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0 8px;
+}
+
+/* ─── Chat Sidebar ─── */
+.gc-chat-panel {
+  width: 340px;
+  min-width: 300px;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  background: #1a1d24;
+  border-left: 1px solid #2a3040;
+  margin: 8px 8px 72px 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.gc-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #1e2330;
+}
+
+.gc-chat-title {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.gc-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.gc-icon-btn:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--color-text-primary);
+}
+
+.gc-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.gc-chat-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.gc-chat-empty p {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.gc-chat-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gc-chat-msg-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.gc-chat-msg-name {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.gc-chat-msg-time {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.gc-chat-msg-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.gc-chat-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid #1e2330;
+  background: #222631;
+}
+
+.gc-chat-input {
+  flex: 1;
+  min-width: 0;
+  background: #111318;
+  border: 1px solid #2a3040;
+  border-radius: 24px;
+  padding: 10px 16px;
+  color: var(--color-text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.gc-chat-input:focus {
+  border-color: var(--color-accent);
+}
+
+.gc-chat-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.gc-send-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  flex-shrink: 0;
+}
+
+.gc-send-btn:hover:not(:disabled) {
+  background: #00bce6;
+  transform: scale(1.05);
+}
+
+.gc-send-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ─── Loading / Error states ─── */
+.gc-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 40px;
+  gap: 16px;
+}
+
+.gc-status-error {
+  color: var(--color-danger);
+}
+
+.gc-status-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.gc-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--color-border-subtle);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ─── Hide default LiveKit controls inside our custom layout ─── */
+.gc-root .lk-control-bar,
+.gc-root .lk-chat,
+.gc-root .lk-chat-toggle {
+  display: none !important;
+}
+
+/* LiveKit focus ring override */
+.gc-root .lk-focus-toggle {
+  display: none !important;
+}
