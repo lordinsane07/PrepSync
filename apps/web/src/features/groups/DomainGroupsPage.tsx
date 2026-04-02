@@ -47,7 +47,7 @@ export default function DomainGroupsPage() {
   const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState(['', '']);
   const [mainView, setMainView] = useState<'chat' | 'lounge' | 'call'>('chat');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [groupsPanelOpen, setGroupsPanelOpen] = useState(true);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -68,9 +68,15 @@ export default function DomainGroupsPage() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Notify AppLayout when entering/leaving call mode
+  // Collapse panels when entering call, restore when leaving
   useEffect(() => {
-    window.dispatchEvent(new CustomEvent('group-call-mode', { detail: { active: mainView === 'call' } }));
+    if (mainView === 'call') {
+      setGroupsPanelOpen(false);
+      window.dispatchEvent(new CustomEvent('group-call-mode', { detail: { active: true } }));
+    } else {
+      setGroupsPanelOpen(true);
+      window.dispatchEvent(new CustomEvent('group-call-mode', { detail: { active: false } }));
+    }
     return () => {
       window.dispatchEvent(new CustomEvent('group-call-mode', { detail: { active: false } }));
     };
@@ -130,7 +136,7 @@ export default function DomainGroupsPage() {
   const handleVote = async (pollId: string, optionIndex: number) => {
     try {
       await votePoll(activeGroup, pollId, optionIndex);
-      fetchMessages(activeGroup); // Refresh to get updated vote counts
+      fetchMessages(activeGroup);
     } catch {
       // ignore
     }
@@ -145,321 +151,285 @@ export default function DomainGroupsPage() {
 
   const handleGroupClick = (gId: string) => {
     setActiveGroup(gId);
+    if (mainView === 'call') return; // stay in call view
     setMainView('chat');
-    setSidebarCollapsed(false);
     navigate(`/groups/${gId}`, { replace: true });
   };
 
-  const handleViewChange = (view: 'chat' | 'lounge' | 'call') => {
-    setMainView(view);
-    if (view === 'call') {
-      setSidebarCollapsed(true);
-    } else {
-      setSidebarCollapsed(false);
-    }
-  };
-
   const activeGroupInfo = groups.find((g) => g.groupId === activeGroup);
+  const isCallMode = mainView === 'call';
 
   return (
-    <div className="h-[calc(100vh-48px)] flex">
-      {/* Left Panel — Group List (collapsible) */}
-      <div
-        className={clsx(
-          'bg-bg-surface border-r border-border-subtle flex flex-col shrink-0 transition-all duration-300 ease-in-out overflow-hidden',
-          sidebarCollapsed ? 'w-[64px]' : 'w-[280px]',
-        )}
-      >
-        <div className={clsx('border-b border-border-subtle flex items-center shrink-0', sidebarCollapsed ? 'p-2 justify-center' : 'p-4 justify-between')}>
-          {!sidebarCollapsed && (
-            <h2 className="text-heading text-text-primary font-sans font-semibold">Groups</h2>
-          )}
+    <div className="dgp-container">
+      {/* ── Groups Panel (slides in / out) ── */}
+      <div className={clsx('dgp-groups-panel', !groupsPanelOpen && 'dgp-groups-panel--hidden')}>
+        <div className="dgp-groups-header">
+          <h2 className="dgp-groups-title">Groups</h2>
           <button
-            onClick={() => setSidebarCollapsed((v) => !v)}
-            className="w-8 h-8 rounded-md flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-bg-overlay transition-colors"
-            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            onClick={() => setGroupsPanelOpen(false)}
+            className="dgp-icon-btn"
+            title="Hide groups panel"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-              style={{ transform: sidebarCollapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s ease' }}
-            >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto">
+        <div className="dgp-groups-list">
           {groups.map((group) => (
             <button
               key={group.groupId}
               onClick={() => handleGroupClick(group.groupId)}
-              className={clsx(
-                'w-full flex items-center transition-colors relative text-left',
-                sidebarCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-3',
-                activeGroup === group.groupId
-                  ? 'bg-bg-overlay'
-                  : 'hover:bg-bg-overlay/50',
-              )}
-              title={sidebarCollapsed ? (group.name || group.groupId) : undefined}
+              className={clsx('dgp-group-item', activeGroup === group.groupId && 'dgp-group-item--active')}
             >
               {activeGroup === group.groupId && (
-                <span
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-8 rounded-r-sm"
-                  style={{ backgroundColor: group.color }}
-                />
+                <span className="dgp-group-indicator" style={{ backgroundColor: group.color }} />
               )}
-              <div
-                className={clsx('rounded-full flex items-center justify-center shrink-0', sidebarCollapsed ? 'w-9 h-9' : 'w-10 h-10')}
-                style={{ backgroundColor: `${group.color}20` }}
-              >
-                <span className={sidebarCollapsed ? 'text-base' : 'text-lg'}>{GROUP_ICONS[group.groupId] || '💬'}</span>
+              <div className="dgp-group-icon" style={{ backgroundColor: `${group.color}20` }}>
+                <span>{GROUP_ICONS[group.groupId] || '💬'}</span>
               </div>
-              {!sidebarCollapsed && (
-                <div className="flex-1 min-w-0">
-                  <p className="text-body text-text-primary font-sans truncate">{group.name}</p>
-                  {group.lastMessage && (
-                    <p className="text-caption text-text-muted font-sans truncate">
-                      {group.lastMessage.senderName}: {group.lastMessage.content}
-                    </p>
-                  )}
-                </div>
-              )}
+              <div className="dgp-group-info">
+                <p className="dgp-group-name">{group.name}</p>
+                {group.lastMessage && (
+                  <p className="dgp-group-last-msg">
+                    {group.lastMessage.senderName}: {group.lastMessage.content}
+                  </p>
+                )}
+              </div>
             </button>
           ))}
           {loadingGroups && (
-            <div className="p-4 text-center">
-              <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto" />
+            <div className="dgp-loading">
+              <div className="dgp-spinner" />
             </div>
           )}
         </div>
       </div>
 
-      {/* Right Panel — Active Group Chat */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
-        <div className="h-14 bg-bg-surface border-b border-border-subtle flex items-center justify-between px-4 shrink-0">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-9 h-9 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: `${GROUP_COLORS[activeGroup] || '#00D4FF'}20` }}
-            >
+      {/* ── Expand groups button (shown when panel hidden) ── */}
+      {!groupsPanelOpen && (
+        <button
+          onClick={() => setGroupsPanelOpen(true)}
+          className="dgp-expand-btn"
+          title="Show groups panel"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      )}
+
+      {/* ── Main Content ── */}
+      <div className="dgp-main">
+        {/* Header Bar */}
+        <div className={clsx('dgp-header', isCallMode && 'dgp-header--call')}>
+          <div className="dgp-header-left">
+            <div className="dgp-header-icon" style={{ backgroundColor: `${GROUP_COLORS[activeGroup] || '#00D4FF'}20` }}>
               <span>{GROUP_ICONS[activeGroup] || '💬'}</span>
             </div>
             <div>
-              <p className="text-body text-text-primary font-sans font-medium">
-                {activeGroupInfo?.name || activeGroup}
-              </p>
-              <p className="text-caption text-text-muted font-sans">
-                {activeGroupInfo?.totalMessages || 0} messages
-              </p>
+              <p className="dgp-header-name">{activeGroupInfo?.name || activeGroup}</p>
+              <p className="dgp-header-meta">{activeGroupInfo?.totalMessages || 0} messages</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              size="sm" 
-              variant={mainView === 'chat' ? 'primary' : 'secondary'} 
-              onClick={() => handleViewChange('chat')}
+          <div className="dgp-header-tabs">
+            <button
+              className={clsx('dgp-tab', mainView === 'chat' && 'dgp-tab--active')}
+              onClick={() => setMainView('chat')}
             >
               Chat
-            </Button>
-            <Button 
-              size="sm" 
-              variant={mainView === 'lounge' ? 'primary' : 'secondary'} 
-              onClick={() => handleViewChange('lounge')}
+            </button>
+            <button
+              className={clsx('dgp-tab', mainView === 'lounge' && 'dgp-tab--active')}
+              onClick={() => setMainView('lounge')}
             >
               Study Lounge
-            </Button>
-            <Button 
-              size="sm" 
-              variant={mainView === 'call' ? 'primary' : 'secondary'} 
-              onClick={() => handleViewChange('call')}
+            </button>
+            <button
+              className={clsx('dgp-tab dgp-tab--call', mainView === 'call' && 'dgp-tab--active')}
+              onClick={() => setMainView('call')}
             >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15.05 5A5 5 0 0 1 19 8.95M15.05 1A9 9 0 0 1 23 8.94M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+              </svg>
               Group Call
-            </Button>
+            </button>
           </div>
         </div>
 
         {/* Dynamic Content */}
         {mainView === 'lounge' ? (
-          <div className="flex-1 min-h-0 bg-bg-base">
+          <div className="dgp-content">
             <StudyLounge groupId={activeGroup} />
           </div>
         ) : mainView === 'call' ? (
-          <div className="flex-1 min-h-0 bg-black p-4">
+          <div className="dgp-content dgp-content--call">
             <GroupCall roomName={`group-${activeGroup}`} />
           </div>
         ) : (
           <>
             {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-          {loadingMessages ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : messages.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <p className="text-body text-text-muted font-sans mb-1">No messages yet</p>
-                <p className="text-caption text-text-muted font-sans">Be the first to start a conversation!</p>
-              </div>
-            </div>
-          ) : (
-            messages.map((msg) => {
-              const isMe = msg.userId?._id === user?._id;
-              return (
-                <div key={msg._id} className="flex gap-3 group">
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-                    style={{ backgroundColor: `${GROUP_COLORS[activeGroup] || '#00D4FF'}15` }}
-                  >
-                    <span className="text-xs font-medium" style={{ color: GROUP_COLORS[activeGroup] }}>
-                      {msg.userId?.name?.charAt(0)?.toUpperCase() || '?'}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2 mb-0.5">
-                      <span className={clsx('text-body font-sans font-medium', isMe ? 'text-accent' : 'text-text-primary')}>
-                        {msg.userId?.name || 'Unknown'}
-                      </span>
-                      <span className="text-[10px] text-text-muted font-sans">
-                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-
-                    {/* Text message */}
-                    {msg.type === 'text' && (
-                      <p className="text-body text-text-secondary font-sans whitespace-pre-wrap">{msg.content}</p>
-                    )}
-
-                    {/* Poll message */}
-                    {msg.type === 'poll' && msg.poll && (
-                      <div className="bg-bg-surface border border-border-subtle rounded-lg p-4 max-w-sm mt-1">
-                        <p className="text-body text-text-primary font-sans font-medium mb-3">
-                          📊 {msg.poll.question}
-                        </p>
-                        <div className="flex flex-col gap-2">
-                          {msg.poll.options.map((opt, idx) => {
-                            const totalVotes = msg.poll!.options.reduce(
-                              (sum, o) => sum + (o.voteCount || o.votes?.length || 0), 0,
-                            );
-                            const voteCount = opt.voteCount || opt.votes?.length || 0;
-                            const pct = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
-
-                            return (
-                              <button
-                                key={idx}
-                                onClick={() => handleVote(msg._id, idx)}
-                                disabled={msg.poll!.closed}
-                                className="relative flex items-center justify-between px-3 py-2 rounded-md border border-border-subtle hover:border-accent/40 transition-colors overflow-hidden text-left"
-                              >
-                                <div
-                                  className="absolute inset-0 rounded-md opacity-10"
-                                  style={{
-                                    width: `${pct}%`,
-                                    backgroundColor: GROUP_COLORS[activeGroup] || '#00D4FF',
-                                  }}
-                                />
-                                <span className="text-body text-text-primary font-sans relative z-10">
-                                  {opt.text}
-                                </span>
-                                <span className="text-caption text-text-muted font-mono relative z-10">
-                                  {voteCount} ({pct}%)
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                        {msg.poll.closed && (
-                          <p className="text-caption text-text-muted font-sans mt-2">Poll closed</p>
-                        )}
-                      </div>
-                    )}
-
-                    {/* File message */}
-                    {msg.type === 'file' && msg.attachments?.map((att, i) => (
-                      <a
-                        key={i}
-                        href={att.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 mt-1 px-3 py-2 bg-bg-surface border border-border-subtle rounded-md hover:border-accent/40 transition-colors"
-                      >
-                        <span>{att.type === 'image' ? '🖼️' : '📄'}</span>
-                        <span className="text-body text-text-primary font-sans">{att.filename}</span>
-                      </a>
-                    ))}
-
-                    {/* System message */}
-                    {msg.type === 'system' && (
-                      <p className="text-caption text-text-muted font-sans italic">{msg.content}</p>
-                    )}
+            <div className="dgp-messages">
+              {loadingMessages ? (
+                <div className="dgp-messages-empty">
+                  <div className="dgp-spinner" />
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="dgp-messages-empty">
+                  <div className="dgp-messages-empty-inner">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-text-muted)', marginBottom: 12 }}>
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                    <p className="dgp-empty-title">No messages yet</p>
+                    <p className="dgp-empty-subtitle">Be the first to start a conversation!</p>
                   </div>
                 </div>
-              );
-            })
-          )}
-          <div ref={chatEndRef} />
-        </div>
+              ) : (
+                messages.map((msg) => {
+                  const isMe = msg.userId?._id === user?._id;
+                  return (
+                    <div key={msg._id} className="dgp-msg">
+                      <div
+                        className="dgp-msg-avatar"
+                        style={{ backgroundColor: `${GROUP_COLORS[activeGroup] || '#00D4FF'}15` }}
+                      >
+                        <span className="dgp-msg-avatar-letter" style={{ color: GROUP_COLORS[activeGroup] }}>
+                          {msg.userId?.name?.charAt(0)?.toUpperCase() || '?'}
+                        </span>
+                      </div>
+                      <div className="dgp-msg-body">
+                        <div className="dgp-msg-meta">
+                          <span className={clsx('dgp-msg-name', isMe && 'dgp-msg-name--me')}>
+                            {msg.userId?.name || 'Unknown'}
+                          </span>
+                          <span className="dgp-msg-time">
+                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
 
-        {/* Poll creation form */}
-        {showPollForm && (
-          <div className="bg-bg-surface border-t border-border-subtle p-4">
-            <div className="max-w-md">
-              <p className="text-body text-text-primary font-sans font-medium mb-3">Create a Poll</p>
-              <input
-                value={pollQuestion}
-                onChange={(e) => setPollQuestion(e.target.value)}
-                placeholder="Ask a question..."
-                className="w-full bg-bg-elevated border border-border-default rounded-md px-3 py-2 text-body font-sans text-text-primary mb-3 focus:outline-none focus:border-accent placeholder:text-text-muted"
-              />
-              {pollOptions.map((opt, i) => (
-                <input
-                  key={i}
-                  value={opt}
-                  onChange={(e) => {
-                    const next = [...pollOptions];
-                    next[i] = e.target.value;
-                    setPollOptions(next);
-                  }}
-                  placeholder={`Option ${i + 1}`}
-                  className="w-full bg-bg-elevated border border-border-default rounded-md px-3 py-2 text-body font-sans text-text-primary mb-2 focus:outline-none focus:border-accent placeholder:text-text-muted"
-                />
-              ))}
-              <div className="flex gap-2 mt-2">
-                {pollOptions.length < 4 && (
-                  <Button size="sm" variant="ghost" onClick={() => setPollOptions([...pollOptions, ''])}>
-                    + Add Option
-                  </Button>
-                )}
-                <div className="flex-1" />
-                <Button size="sm" variant="ghost" onClick={() => setShowPollForm(false)}>Cancel</Button>
-                <Button size="sm" onClick={handleCreatePoll}>Create Poll</Button>
-              </div>
+                        {msg.type === 'text' && (
+                          <p className="dgp-msg-text">{msg.content}</p>
+                        )}
+
+                        {msg.type === 'poll' && msg.poll && (
+                          <div className="dgp-poll">
+                            <p className="dgp-poll-question">📊 {msg.poll.question}</p>
+                            <div className="dgp-poll-options">
+                              {msg.poll.options.map((opt, idx) => {
+                                const totalVotes = msg.poll!.options.reduce(
+                                  (sum, o) => sum + (o.voteCount || o.votes?.length || 0), 0,
+                                );
+                                const voteCount = opt.voteCount || opt.votes?.length || 0;
+                                const pct = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
+                                return (
+                                  <button
+                                    key={idx}
+                                    onClick={() => handleVote(msg._id, idx)}
+                                    disabled={msg.poll!.closed}
+                                    className="dgp-poll-option"
+                                  >
+                                    <div
+                                      className="dgp-poll-bar"
+                                      style={{
+                                        width: `${pct}%`,
+                                        backgroundColor: GROUP_COLORS[activeGroup] || '#00D4FF',
+                                      }}
+                                    />
+                                    <span className="dgp-poll-option-text">{opt.text}</span>
+                                    <span className="dgp-poll-option-count">{voteCount} ({pct}%)</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {msg.poll.closed && (
+                              <p className="dgp-poll-closed">Poll closed</p>
+                            )}
+                          </div>
+                        )}
+
+                        {msg.type === 'file' && msg.attachments?.map((att, i) => (
+                          <a
+                            key={i}
+                            href={att.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="dgp-file-link"
+                          >
+                            <span>{att.type === 'image' ? '🖼️' : '📄'}</span>
+                            <span>{att.filename}</span>
+                          </a>
+                        ))}
+
+                        {msg.type === 'system' && (
+                          <p className="dgp-msg-system">{msg.content}</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+              <div ref={chatEndRef} />
             </div>
-          </div>
-        )}
 
-        {/* Input bar */}
-        <div className="bg-bg-surface border-t border-border-subtle p-3">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowPollForm(!showPollForm)}
-              className="w-9 h-9 rounded-md flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-bg-overlay transition-colors"
-              title="Create Poll"
-            >
-              📊
-            </button>
-            <input
-              value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type a message..."
-              className="flex-1 bg-bg-base border border-border-subtle rounded-md px-4 py-2.5 text-body font-sans text-text-primary focus:outline-none focus:border-accent placeholder:text-text-muted"
-            />
-            <Button size="sm" onClick={handleSend} disabled={!messageInput.trim() || sending}>
-              Send
-            </Button>
-          </div>
-        </div>
-        </>
+            {/* Poll creation form */}
+            {showPollForm && (
+              <div className="dgp-poll-form">
+                <div className="dgp-poll-form-inner">
+                  <p className="dgp-poll-form-title">Create a Poll</p>
+                  <input
+                    value={pollQuestion}
+                    onChange={(e) => setPollQuestion(e.target.value)}
+                    placeholder="Ask a question..."
+                    className="dgp-input"
+                  />
+                  {pollOptions.map((opt, i) => (
+                    <input
+                      key={i}
+                      value={opt}
+                      onChange={(e) => {
+                        const next = [...pollOptions];
+                        next[i] = e.target.value;
+                        setPollOptions(next);
+                      }}
+                      placeholder={`Option ${i + 1}`}
+                      className="dgp-input dgp-input--option"
+                    />
+                  ))}
+                  <div className="dgp-poll-form-actions">
+                    {pollOptions.length < 4 && (
+                      <Button size="sm" variant="ghost" onClick={() => setPollOptions([...pollOptions, ''])}>
+                        + Add Option
+                      </Button>
+                    )}
+                    <div style={{ flex: 1 }} />
+                    <Button size="sm" variant="ghost" onClick={() => setShowPollForm(false)}>Cancel</Button>
+                    <Button size="sm" onClick={handleCreatePoll}>Create Poll</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Input bar */}
+            <div className="dgp-input-bar">
+              <button
+                onClick={() => setShowPollForm(!showPollForm)}
+                className="dgp-icon-btn"
+                title="Create Poll"
+              >
+                📊
+              </button>
+              <input
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type a message..."
+                className="dgp-chat-input"
+              />
+              <Button size="sm" onClick={handleSend} disabled={!messageInput.trim() || sending}>
+                Send
+              </Button>
+            </div>
+          </>
         )}
       </div>
     </div>

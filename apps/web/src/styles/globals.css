@@ -520,3 +520,597 @@ body {
 .gc-root .lk-focus-toggle {
   display: none !important;
 }
+
+/* ══════════════════════════════════════════════════════════
+   DomainGroupsPage Layout
+   ══════════════════════════════════════════════════════════ */
+
+.dgp-container {
+  height: calc(100vh - 64px); /* 64px TopBar */
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ─── Groups Side Panel ─── */
+.dgp-groups-panel {
+  width: 280px;
+  min-width: 280px;
+  background: var(--color-bg-surface);
+  border-right: 1px solid var(--color-border-subtle);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.25s ease;
+  overflow: hidden;
+}
+
+.dgp-groups-panel--hidden {
+  width: 0;
+  min-width: 0;
+  border-right: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dgp-groups-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  flex-shrink: 0;
+}
+
+.dgp-groups-title {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.dgp-groups-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.dgp-group-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.dgp-group-item:hover {
+  background: var(--color-bg-overlay);
+}
+
+.dgp-group-item--active {
+  background: rgba(0, 212, 255, 0.04);
+}
+
+.dgp-group-indicator {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 28px;
+  border-radius: 0 3px 3px 0;
+}
+
+.dgp-group-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 18px;
+}
+
+.dgp-group-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.dgp-group-name {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dgp-group-last-msg {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+/* ─── Expand Button (thin strip on edge) ─── */
+.dgp-expand-btn {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 15;
+  width: 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition: all 0.2s ease;
+}
+
+.dgp-expand-btn:hover {
+  width: 28px;
+  background: var(--color-bg-overlay);
+  color: var(--color-accent);
+  border-color: var(--color-accent-border);
+}
+
+/* ─── Icon Button (reused) ─── */
+.dgp-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.dgp-icon-btn:hover {
+  background: var(--color-bg-overlay);
+  color: var(--color-text-primary);
+}
+
+/* ─── Loading ─── */
+.dgp-loading {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.dgp-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-accent);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ─── Main Content Area ─── */
+.dgp-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ─── Header / Tab Bar ─── */
+.dgp-header {
+  height: 56px;
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  flex-shrink: 0;
+  gap: 16px;
+}
+
+.dgp-header--call {
+  background: rgba(17, 19, 24, 0.95);
+  border-bottom-color: transparent;
+}
+
+.dgp-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.dgp-header-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dgp-header-name {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.dgp-header-meta {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.dgp-header-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Tab Buttons — pill style */
+.dgp-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 17px;
+  border: 1px solid var(--color-border-subtle);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.dgp-tab:hover {
+  background: var(--color-bg-overlay);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-default);
+}
+
+.dgp-tab--active {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  border-color: var(--color-accent);
+}
+
+.dgp-tab--active:hover {
+  background: #00bce6;
+  border-color: #00bce6;
+  color: var(--color-text-inverse);
+}
+
+.dgp-tab--call.dgp-tab--active {
+  background: #ea4335;
+  border-color: #ea4335;
+}
+
+.dgp-tab--call.dgp-tab--active:hover {
+  background: #d93025;
+  border-color: #d93025;
+}
+
+/* ─── Content Area ─── */
+.dgp-content {
+  flex: 1;
+  min-height: 0;
+  background: var(--color-bg-base);
+}
+
+.dgp-content--call {
+  background: #0a0b0e;
+  padding: 0;
+}
+
+/* ─── Messages ─── */
+.dgp-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dgp-messages-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dgp-messages-empty-inner {
+  text-align: center;
+}
+
+.dgp-empty-title {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+
+.dgp-empty-subtitle {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+/* Message row */
+.dgp-msg {
+  display: flex;
+  gap: 12px;
+}
+
+.dgp-msg-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.dgp-msg-avatar-letter {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dgp-msg-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.dgp-msg-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.dgp-msg-name {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.dgp-msg-name--me {
+  color: var(--color-accent);
+}
+
+.dgp-msg-time {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.dgp-msg-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.dgp-msg-system {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* ─── Poll ─── */
+.dgp-poll {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 10px;
+  padding: 16px;
+  max-width: 400px;
+  margin-top: 6px;
+}
+
+.dgp-poll-question {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 12px;
+}
+
+.dgp-poll-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dgp-poll-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-subtle);
+  background: transparent;
+  cursor: pointer;
+  overflow: hidden;
+  text-align: left;
+  transition: border-color 0.15s ease;
+}
+
+.dgp-poll-option:hover:not(:disabled) {
+  border-color: rgba(0, 212, 255, 0.4);
+}
+
+.dgp-poll-bar {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  opacity: 0.1;
+}
+
+.dgp-poll-option-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  position: relative;
+  z-index: 1;
+}
+
+.dgp-poll-option-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  position: relative;
+  z-index: 1;
+}
+
+.dgp-poll-closed {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 8px;
+}
+
+/* ─── File Link ─── */
+.dgp-file-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 8px 14px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.dgp-file-link:hover {
+  border-color: rgba(0, 212, 255, 0.4);
+}
+
+/* ─── Poll Form ─── */
+.dgp-poll-form {
+  background: var(--color-bg-surface);
+  border-top: 1px solid var(--color-border-subtle);
+  padding: 16px 20px;
+}
+
+.dgp-poll-form-inner {
+  max-width: 420px;
+}
+
+.dgp-poll-form-title {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 12px;
+}
+
+.dgp-poll-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.dgp-input {
+  width: 100%;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-default);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color 0.15s ease;
+  margin-bottom: 10px;
+}
+
+.dgp-input--option {
+  margin-bottom: 8px;
+}
+
+.dgp-input:focus {
+  border-color: var(--color-accent);
+}
+
+.dgp-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* ─── Message Input Bar ─── */
+.dgp-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background: var(--color-bg-surface);
+  border-top: 1px solid var(--color-border-subtle);
+  flex-shrink: 0;
+}
+
+.dgp-chat-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--color-bg-base);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.dgp-chat-input:focus {
+  border-color: var(--color-accent);
+}
+
+.dgp-chat-input::placeholder {
+  color: var(--color-text-muted);
+}
