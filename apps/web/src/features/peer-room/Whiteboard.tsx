@@ -7,7 +7,7 @@ interface Point { x: number; y: number; }
 type HistoryEntry = string;
 type Tool = 'select' | 'draw' | 'highlighter' | 'line' | 'arrow' | 'rectangle' | 'circle' | 'text' | 'eraser' | 'laser' | 'pan';
 
-const COLORS = ['#FFFFFF','#00D4FF','#7C3AED','#10B981','#F59E0B','#EC4899','#EF4444','#FF8800'];
+const COLORS = ['#000000','#333333','#00639B','#7C3AED','#10B981','#D32F2F','#E65100','#EC4899'];
 const SIZES = [2, 4, 6, 10];
 const BG_MODES = ['plain', 'grid', 'dots', 'lined'] as const;
 type BgMode = typeof BG_MODES[number];
@@ -18,7 +18,7 @@ export default function Whiteboard({ roomId }: WhiteboardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [tool, setTool] = useState<Tool>('draw');
-  const [color, setColor] = useState('#FFFFFF');
+  const [color, setColor] = useState('#000000');
   const [size, setSize] = useState(2);
   const [fillShape, setFillShape] = useState(false);
   const [bgMode, setBgMode] = useState<BgMode>('plain');
@@ -57,36 +57,28 @@ export default function Whiteboard({ roomId }: WhiteboardProps) {
   const [currentPage, setCurrentPage] = useState(0);
 
   const initializedRef = useRef(false);
-  const BG_COLOR = '#0D0F14';
+  const BG_COLOR = '#FFFFFF';
 
-  // ─── Background pattern drawing ──────────────────────────
-  const drawBackground = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number) => {
-    ctx.fillStyle = BG_COLOR;
-    ctx.fillRect(0, 0, w, h);
-    ctx.save();
-    ctx.translate(panOffset.x, panOffset.y);
-    ctx.scale(zoom, zoom);
+  // ─── CSS background pattern (reactive) ──────────────────
+  const getBgStyle = useCallback((): React.CSSProperties => {
+    const base: React.CSSProperties = { backgroundColor: BG_COLOR };
     if (bgMode === 'grid') {
-      ctx.strokeStyle = '#1a1d24';
-      ctx.lineWidth = 0.5;
-      const step = 30;
-      for (let x = -w; x < w * 2; x += step) { ctx.beginPath(); ctx.moveTo(x, -h); ctx.lineTo(x, h * 2); ctx.stroke(); }
-      for (let y = -h; y < h * 2; y += step) { ctx.beginPath(); ctx.moveTo(-w, y); ctx.lineTo(w * 2, y); ctx.stroke(); }
+      base.backgroundImage = 'linear-gradient(#e0e0e0 1px, transparent 1px), linear-gradient(90deg, #e0e0e0 1px, transparent 1px)';
+      base.backgroundSize = '30px 30px';
     } else if (bgMode === 'dots') {
-      ctx.fillStyle = '#1e2330';
-      const step = 25;
-      for (let x = 0; x < w * 2; x += step)
-        for (let y = 0; y < h * 2; y += step) {
-          ctx.beginPath(); ctx.arc(x, y, 1, 0, Math.PI * 2); ctx.fill();
-        }
+      base.backgroundImage = 'radial-gradient(circle, #ccc 1px, transparent 1px)';
+      base.backgroundSize = '20px 20px';
     } else if (bgMode === 'lined') {
-      ctx.strokeStyle = '#1a1d24';
-      ctx.lineWidth = 0.5;
-      const step = 30;
-      for (let y = -h; y < h * 2; y += step) { ctx.beginPath(); ctx.moveTo(-w, y); ctx.lineTo(w * 2, y); ctx.stroke(); }
+      base.backgroundImage = 'linear-gradient(#d0d8e8 1px, transparent 1px)';
+      base.backgroundSize = '100% 30px';
     }
-    ctx.restore();
-  }, [bgMode, zoom, panOffset]);
+    return base;
+  }, [bgMode]);
+
+  // Keep a simple clearCanvas helper
+  const clearCanvas = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number) => {
+    ctx.clearRect(0, 0, w, h);
+  }, []);
 
   // ─── Helpers ──────────────────────────────────────────────
   const saveSnapshot = useCallback(() => {
@@ -106,11 +98,10 @@ export default function Whiteboard({ roomId }: WhiteboardProps) {
     const img = new Image();
     img.onload = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawBackground(ctx, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0);
     };
     img.src = dataUrl;
-  }, [drawBackground]);
+  }, []);
 
   const handleUndo = useCallback(() => {
     const canvas = canvasRef.current;
@@ -149,9 +140,9 @@ export default function Whiteboard({ roomId }: WhiteboardProps) {
     if (data) {
       restoreImage(data);
     } else {
-      drawBackground(ctx, canvas.width, canvas.height);
+      clearCanvas(ctx, canvas.width, canvas.height);
     }
-  }, [pages, restoreImage, drawBackground]);
+  }, [pages, restoreImage, clearCanvas]);
 
   const switchPage = useCallback((idx: number) => {
     saveCurrentPage();
@@ -172,11 +163,11 @@ export default function Whiteboard({ roomId }: WhiteboardProps) {
     setCurrentPage(idx);
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
-    if (ctx && canvas) drawBackground(ctx, canvas.width, canvas.height);
+    if (ctx && canvas) clearCanvas(ctx, canvas.width, canvas.height);
     undoStack.current = []; redoStack.current = [];
     setCanUndo(false); setCanRedo(false);
     setSlideThumbs(prev => [...prev, '']);
-  }, [pages, currentPage, saveCurrentPage, drawBackground]);
+  }, [pages, currentPage, saveCurrentPage, clearCanvas]);
 
   const deletePage = useCallback((idx: number) => {
     if (pages.length <= 1) return;
@@ -245,7 +236,7 @@ export default function Whiteboard({ roomId }: WhiteboardProps) {
       canvas.width = w; canvas.height = h;
       overlay.width = w; overlay.height = h;
       if (ctx) {
-        drawBackground(ctx, w, h);
+        clearCanvas(ctx, w, h);
         if (imageData) ctx.putImageData(imageData, 0, 0);
         initializedRef.current = true;
       }
@@ -270,11 +261,17 @@ export default function Whiteboard({ roomId }: WhiteboardProps) {
           context.strokeStyle = act.color;
           context.lineWidth = act.size * 6;
         } else {
-          context.strokeStyle = act.tool === 'eraser' ? BG_COLOR : act.color;
+          if (act.tool === 'eraser') {
+            context.globalCompositeOperation = 'destination-out';
+            context.strokeStyle = 'rgba(0,0,0,1)';
+          } else {
+            context.strokeStyle = act.color;
+          }
           context.lineWidth = act.tool === 'eraser' ? act.size * 4 : act.size;
         }
         context.lineCap = 'round'; context.lineJoin = 'round'; context.stroke();
         context.globalAlpha = 1;
+        context.globalCompositeOperation = 'source-over';
       } else if (act.action === 'shape') {
         context.beginPath();
         if (act.tool === 'line') {
@@ -301,7 +298,7 @@ export default function Whiteboard({ roomId }: WhiteboardProps) {
         context.font = `${act.size * 4}px 'JetBrains Mono', monospace`;
         context.fillText(act.text, act.point.x, act.point.y);
       } else if (act.action === 'clear') {
-        drawBackground(context, c.width, c.height);
+        clearCanvas(context, c.width, c.height);
       } else if (act.action === 'laser') {
         // Render remote laser as temporary dot
         const ov = overlayRef.current?.getContext('2d');
@@ -317,7 +314,7 @@ export default function Whiteboard({ roomId }: WhiteboardProps) {
     };
     socket.on('whiteboard:update', handleUpdate);
     return () => { observer.disconnect(); socket.off('whiteboard:update', handleUpdate); };
-  }, [roomId, drawBackground]);
+  }, [roomId, clearCanvas]);
 
   // ─── Zoom with scroll ──────────────────────────────────
   useEffect(() => {
@@ -445,13 +442,19 @@ export default function Whiteboard({ roomId }: WhiteboardProps) {
       ctx.beginPath(); ctx.moveTo(lastPoint.x, lastPoint.y); ctx.lineTo(point.x, point.y);
       if (tool === 'highlighter') {
         ctx.globalAlpha = 0.3; ctx.strokeStyle = color; ctx.lineWidth = size * 6;
+      } else if (tool === 'eraser') {
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.strokeStyle = 'rgba(0,0,0,1)';
+        ctx.lineWidth = size * 4;
       } else {
         ctx.globalAlpha = 1;
-        ctx.strokeStyle = tool === 'eraser' ? BG_COLOR : color;
-        ctx.lineWidth = tool === 'eraser' ? size * 4 : size;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = size;
       }
       ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
       ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
       getSocket().emit('whiteboard:update', { roomId, objects: { action: 'draw-segment', start: lastPoint, end: point, color, size, tool } });
       setLastPoint(point);
     } else if (['line', 'arrow', 'rectangle', 'circle'].includes(tool)) {
@@ -519,7 +522,7 @@ export default function Whiteboard({ roomId }: WhiteboardProps) {
     const canvas = canvasRef.current;
     if (!ctx || !canvas) return;
     saveSnapshot();
-    drawBackground(ctx, canvas.width, canvas.height);
+    clearCanvas(ctx, canvas.width, canvas.height);
     getSocket().emit('whiteboard:update', { roomId, objects: { action: 'clear' } });
   };
   const handleExport = () => {
@@ -635,7 +638,7 @@ export default function Whiteboard({ roomId }: WhiteboardProps) {
       </div>
 
       {/* ── Canvas ── */}
-      <div ref={containerRef} className={clsx('flex-1 min-h-0 bg-[#0D0F14] relative overflow-hidden', cursor)}>
+      <div ref={containerRef} className={clsx('flex-1 min-h-0 relative overflow-hidden', cursor)} style={getBgStyle()}>
         <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block"
           style={{ transform: `translate(${panOffset.x}px,${panOffset.y}px) scale(${zoom})`, transformOrigin: '0 0' }}
           onMouseDown={startDraw} onMouseMove={draw} onMouseUp={endDraw} onMouseLeave={endDraw}
