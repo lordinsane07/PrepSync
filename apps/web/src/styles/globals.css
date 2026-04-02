@@ -773,6 +773,15 @@ body {
   overflow: hidden;
 }
 
+.dgp-groups-panel--mobile {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+}
+
 .dgp-groups-panel--hidden {
   width: 0;
   min-width: 0;
@@ -1103,10 +1112,15 @@ body {
   color: var(--color-text-muted);
 }
 
-/* Message row */
+/* Message row - WhatsApp style */
 .dgp-msg {
   display: flex;
   gap: 12px;
+  justify-content: flex-start;
+}
+
+.dgp-msg--me {
+  flex-direction: row-reverse;
 }
 
 .dgp-msg-avatar {
@@ -1127,15 +1141,26 @@ body {
 }
 
 .dgp-msg-body {
-  flex: 1;
-  min-width: 0;
+  max-width: 70%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.dgp-msg-body--me {
+  align-items: flex-end;
 }
 
 .dgp-msg-meta {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
+  padding: 0 4px;
+}
+
+.dgp-msg-meta--me {
+  flex-direction: row-reverse;
 }
 
 .dgp-msg-name {
@@ -1158,10 +1183,22 @@ body {
 .dgp-msg-text {
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
-  color: var(--color-text-secondary);
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  padding: 10px 14px;
+  border-radius: 16px;
+  border-top-left-radius: 4px;
+  color: var(--color-text-primary);
+}
+
+.dgp-msg-text--me {
+  background: rgba(0, 212, 255, 0.1);
+  border-color: rgba(0, 212, 255, 0.2);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 4px;
 }
 
 .dgp-msg-system {
@@ -1347,4 +1384,551 @@ body {
 
 .dgp-chat-input::placeholder {
   color: var(--color-text-muted);
+}
+
+/* ══════════════════════════════════════════════════════════
+   Rich Media Message Styles
+   ══════════════════════════════════════════════════════════ */
+
+/* ─── Attachment Menu ─── */
+.dgp-attach-wrapper {
+  position: relative;
+}
+
+.dgp-attach-menu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 8px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 12px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 180px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  z-index: 20;
+  animation: dgp-menu-in 0.15s ease-out;
+}
+
+@keyframes dgp-menu-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dgp-attach-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  transition: background 0.15s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.dgp-attach-option:hover {
+  background: var(--color-bg-overlay);
+}
+
+.dgp-attach-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* ─── Media: Image ─── */
+.dgp-media-image {
+  max-width: 360px;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid var(--color-border-subtle);
+  transition: border-color 0.15s ease;
+}
+
+.dgp-media-image:hover {
+  border-color: rgba(0, 212, 255, 0.3);
+}
+
+.dgp-media-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-height: 320px;
+  object-fit: cover;
+}
+
+/* ─── Media: Video ─── */
+.dgp-media-video {
+  max-width: 420px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+}
+
+.dgp-media-video video {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-height: 320px;
+  background: #000;
+}
+
+/* ─── Media: Audio ─── */
+.dgp-media-audio {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 10px;
+  max-width: 380px;
+}
+
+.dgp-audio-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.dgp-audio-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.dgp-audio-name {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Media: Voice ─── */
+.dgp-media-voice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 20px;
+  border-top-left-radius: 4px;
+}
+
+.dgp-media-voice--me {
+  background: rgba(0, 212, 255, 0.1);
+  border-color: rgba(0, 212, 255, 0.2);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 4px;
+}
+
+.dgp-voice-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dgp-voice-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.dgp-voice-duration {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+  display: block;
+}
+
+/* ─── Media: Document ─── */
+.dgp-media-doc {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 10px;
+  border-top-left-radius: 4px;
+  max-width: 360px;
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.dgp-media-doc--me {
+  background: rgba(0, 212, 255, 0.1);
+  border-color: rgba(0, 212, 255, 0.2);
+  border-top-left-radius: 10px;
+  border-top-right-radius: 4px;
+}
+
+.dgp-media-doc:hover {
+  border-color: rgba(0, 212, 255, 0.3);
+}
+
+.dgp-doc-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.dgp-doc-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.dgp-doc-name {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dgp-doc-size {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.dgp-doc-download {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.dgp-media-doc:hover .dgp-doc-download {
+  color: var(--color-accent);
+}
+
+/* ─── Upload Progress ─── */
+.dgp-upload-progress {
+  position: relative;
+  height: 28px;
+  background: var(--color-bg-surface);
+  border-top: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.dgp-upload-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, rgba(0,212,255,0.15), rgba(0,212,255,0.25));
+  transition: width 0.3s ease;
+}
+
+.dgp-upload-text {
+  position: relative;
+  z-index: 1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--color-accent);
+  padding: 0 16px;
+}
+
+/* ─── Upload Error ─── */
+.dgp-upload-error {
+  padding: 8px 20px;
+  background: var(--color-danger-dim);
+  border-top: 1px solid rgba(255,68,68,0.2);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--color-danger);
+}
+
+/* ─── File Preview Overlay ─── */
+.dgp-preview-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: dgp-fade-in 0.2s ease;
+}
+
+@keyframes dgp-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.dgp-preview-content {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 16px;
+  overflow: hidden;
+  max-width: 640px;
+  width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.dgp-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.dgp-preview-title {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.dgp-preview-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: #000;
+}
+
+.dgp-preview-body img,
+.dgp-preview-body video {
+  max-width: 100%;
+  max-height: 50vh;
+  border-radius: 8px;
+}
+
+.dgp-preview-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.dgp-preview-name {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dgp-preview-size {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+/* ─── Voice Recording Bar ─── */
+.dgp-recording-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.dgp-recording-cancel {
+  color: var(--color-danger) !important;
+}
+
+.dgp-recording-indicator {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+}
+
+.dgp-recording-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ea4335;
+  animation: dgp-pulse 1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes dgp-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+.dgp-recording-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.dgp-recording-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.dgp-recording-send {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  flex-shrink: 0;
+}
+
+.dgp-recording-send:hover {
+  background: #00bce6;
+  transform: scale(1.05);
+}
+
+/* ─── Voice Record Button ─── */
+.dgp-voice-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.dgp-voice-btn:hover {
+  background: rgba(0, 212, 255, 0.1);
+  color: var(--color-accent);
+}
+
+.dgp-voice-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── Image Lightbox ─── */
+.dgp-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  animation: dgp-fade-in 0.2s ease;
+}
+
+.dgp-lightbox img {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.dgp-lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.dgp-lightbox-close:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+/* ─── Audio element styling ─── */
+.dgp-media-audio audio,
+.dgp-media-voice audio {
+  height: 32px;
+  min-width: 260px;
+}
+
+/* ─── Mobile Responsiveness ─── */
+@media (max-width: 768px) {
+  .dgp-header {
+    padding: 0 12px;
+    flex-wrap: wrap;       
+    height: auto;
+    min-height: 56px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+  
+  .dgp-header-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    width: 100%;
+    padding-bottom: 4px;
+  }
+
+  .dgp-header-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dgp-msg-body {
+    max-width: 85%;
+  }
+
+  .dgp-input-area {
+    padding: 10px 12px;
+  }
+
+  /* Audio player fix for smaller screens */
+  .dgp-media-audio audio,
+  .dgp-media-voice audio {
+    min-width: 180px; 
+  }
 }

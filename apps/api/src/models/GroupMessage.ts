@@ -3,10 +3,13 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 // ===== Subdocument Interfaces =====
 
 interface AttachmentDoc {
-  type: 'image' | 'pdf';
+  type: 'image' | 'video' | 'audio' | 'document' | 'voice';
   url: string;
   filename: string;
   filesize: number;
+  mimeType?: string;
+  duration?: number; // seconds, for audio/video/voice
+  thumbnailUrl?: string; // for video thumbnails
 }
 
 interface PollOptionDoc {
@@ -26,7 +29,7 @@ interface PollDoc {
 export interface IGroupMessage extends Document {
   groupId: string;
   userId: mongoose.Types.ObjectId;
-  type: 'text' | 'file' | 'poll' | 'system';
+  type: 'text' | 'file' | 'poll' | 'system' | 'voice';
   content?: string;
   attachments?: AttachmentDoc[];
   poll?: PollDoc;
@@ -38,10 +41,17 @@ export interface IGroupMessage extends Document {
 
 const attachmentSchema = new Schema<AttachmentDoc>(
   {
-    type: { type: String, required: true, enum: ['image', 'pdf'] },
+    type: {
+      type: String,
+      required: true,
+      enum: ['image', 'video', 'audio', 'document', 'voice'],
+    },
     url: { type: String, required: true },
     filename: { type: String, required: true },
     filesize: { type: Number, required: true },
+    mimeType: { type: String },
+    duration: { type: Number },
+    thumbnailUrl: { type: String },
   },
   { _id: false },
 );
@@ -76,7 +86,7 @@ const groupMessageSchema = new Schema<IGroupMessage>(
     type: {
       type: String,
       required: true,
-      enum: ['text', 'file', 'poll', 'system'],
+      enum: ['text', 'file', 'poll', 'system', 'voice'],
       default: 'text',
     },
     content: { type: String },

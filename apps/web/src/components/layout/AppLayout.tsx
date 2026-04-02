@@ -20,13 +20,20 @@ export default function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [groupCallActive, setGroupCallActive] = useState(false);
   const [showSessionConfig, setShowSessionConfig] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const user = useAuthStore((s) => s.user);
 
   // Auto-collapse sidebar on smaller screens
   useEffect(() => {
     function handleResize() {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
       if (!groupCallActive) {
-        setSidebarCollapsed(window.innerWidth < 1200);
+        setSidebarCollapsed(window.innerWidth < 1200 && !mobile);
+      }
+      if (!mobile) {
+        setMobileMenuOpen(false);
       }
     }
     handleResize();
@@ -70,15 +77,22 @@ export default function AppLayout() {
         userName={user?.name || 'User'}
         userAvatar={user?.avatarUrl}
         readinessScore={user?.readinessIndex?.overall}
-        collapsed={sidebarCollapsed}
+        collapsed={sidebarCollapsed && !isMobile}
+        mobileOpen={mobileMenuOpen}
+        onMobileClose={() => setMobileMenuOpen(false)}
         onNewSession={() => setShowSessionConfig(true)}
         onToggle={() => setSidebarCollapsed((v) => !v)}
       />
       <div
         className="transition-all duration-200"
-        style={{ marginLeft: sidebarCollapsed ? 64 : 240 }}
+        style={{ marginLeft: isMobile ? 0 : (sidebarCollapsed ? 64 : 240) }}
       >
-        <TopBar title={pageTitle} userName={user?.name || 'User'} />
+        <TopBar 
+          title={pageTitle} 
+          userName={user?.name || 'User'} 
+          userAvatar={user?.avatarUrl}
+          onMenuClick={isMobile ? () => setMobileMenuOpen(true) : undefined}
+        />
         <Outlet />
       </div>
 

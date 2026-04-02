@@ -25,13 +25,23 @@ export interface PollOptionData {
   votes?: string[];
 }
 
+export interface AttachmentData {
+  type: 'image' | 'video' | 'audio' | 'document' | 'voice';
+  url: string;
+  filename: string;
+  filesize: number;
+  mimeType?: string;
+  duration?: number;
+  thumbnailUrl?: string;
+}
+
 export interface GroupMessageData {
   _id: string;
   groupId: string;
   userId: GroupMessageUser;
-  type: 'text' | 'file' | 'poll' | 'system';
+  type: 'text' | 'file' | 'poll' | 'system' | 'voice';
   content?: string;
-  attachments?: { type: 'image' | 'pdf'; url: string; filename: string; filesize: number }[];
+  attachments?: AttachmentData[];
   poll?: {
     question: string;
     options: PollOptionData[];
@@ -60,6 +70,30 @@ export async function sendGroupMessage(
   content: string,
 ): Promise<GroupMessageData> {
   const { data } = await api.post(`/groups/${groupId}/messages`, { content, type: 'text' });
+  return data;
+}
+
+export async function sendFileMessage(
+  groupId: string,
+  attachments: AttachmentData[],
+  content?: string,
+): Promise<GroupMessageData> {
+  const { data } = await api.post(`/groups/${groupId}/messages`, {
+    type: 'file',
+    attachments,
+    content: content?.trim() || undefined,
+  });
+  return data;
+}
+
+export async function sendVoiceMessage(
+  groupId: string,
+  attachment: AttachmentData,
+): Promise<GroupMessageData> {
+  const { data } = await api.post(`/groups/${groupId}/messages`, {
+    type: 'voice',
+    attachments: [attachment],
+  });
   return data;
 }
 

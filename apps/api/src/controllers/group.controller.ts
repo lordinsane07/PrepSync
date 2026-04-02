@@ -107,12 +107,24 @@ export async function sendMessage(
 
     const { content, type = 'text', attachments } = req.body as {
       content?: string;
-      type?: 'text' | 'file';
-      attachments?: { type: 'image' | 'pdf'; url: string; filename: string; filesize: number }[];
+      type?: 'text' | 'file' | 'voice';
+      attachments?: {
+        type: 'image' | 'video' | 'audio' | 'document' | 'voice';
+        url: string;
+        filename: string;
+        filesize: number;
+        mimeType?: string;
+        duration?: number;
+        thumbnailUrl?: string;
+      }[];
     };
 
     if (type === 'text' && (!content || !content.trim())) {
       throw ApiError.badRequest('Message content is required');
+    }
+
+    if ((type === 'file' || type === 'voice') && (!attachments || attachments.length === 0)) {
+      throw ApiError.badRequest('Attachments are required for file/voice messages');
     }
 
     const message = await GroupMessage.create({

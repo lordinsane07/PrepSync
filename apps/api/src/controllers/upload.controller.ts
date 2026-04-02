@@ -20,7 +20,14 @@ export async function getUploadSignature(
       throw ApiError.badRequest('File upload is not configured');
     }
 
-    const { folder = 'prepsync' } = req.body as { folder?: string };
+    const {
+      folder = 'prepsync',
+      resourceType = 'image',
+    } = req.body as {
+      folder?: string;
+      resourceType?: 'image' | 'video' | 'raw' | 'auto';
+    };
+
     const timestamp = Math.round(Date.now() / 1000);
 
     // Create signature for Cloudinary signed upload
@@ -34,6 +41,7 @@ export async function getUploadSignature(
       cloudName: CLOUDINARY_CLOUD,
       apiKey: CLOUDINARY_API_KEY,
       folder,
+      resourceType,
     });
   } catch (error) {
     next(error);

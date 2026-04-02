@@ -7,6 +7,7 @@ interface TopBarProps {
   userName?: string;
   userAvatar?: string;
   onLogout?: () => void;
+  onMenuClick?: () => void;
 }
 
 export default function TopBar({
@@ -14,6 +15,7 @@ export default function TopBar({
   userName = 'User',
   userAvatar,
   onLogout,
+  onMenuClick,
 }: TopBarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -32,8 +34,23 @@ export default function TopBar({
   }, [dropdownOpen]);
 
   return (
-    <header className="h-16 border-b border-border-subtle bg-bg-base flex items-center justify-between px-8">
-      <h1 className="text-title text-text-primary font-sans">{title}</h1>
+    <header className="h-16 border-b border-border-subtle bg-bg-base flex items-center justify-between px-4 md:px-8 shrink-0">
+      <div className="flex items-center gap-3">
+        {onMenuClick && (
+          <button
+            onClick={onMenuClick}
+            className="p-2 -ml-2 rounded-md text-text-muted hover:text-text-primary hover:bg-bg-overlay transition-colors"
+            aria-label="Open menu"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+        )}
+        <h1 className="text-title text-text-primary font-sans truncate">{title}</h1>
+      </div>
 
       <div className="flex items-center gap-4">
         {/* Notification bell placeholder */}

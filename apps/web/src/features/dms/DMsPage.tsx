@@ -28,10 +28,21 @@ export default function DMsPage() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [threadsPanelOpen, setThreadsPanelOpen] = useState(window.innerWidth >= 768 || !activeThreadId);
+
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchThreads();
+    
+    function handleResize() {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) setThreadsPanelOpen(true);
+    }
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
@@ -138,11 +149,31 @@ export default function DMsPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-48px)] flex">
+    <div className="h-[calc(100vh-64px)] md:h-[calc(100vh-48px)] flex relative overflow-hidden">
+      {/* Mobile Backdrop */}
+      {isMobile && threadsPanelOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-20 md:hidden" 
+          onClick={() => setThreadsPanelOpen(false)}
+        />
+      )}
+
       {/* Thread List */}
-      <div className="w-[300px] bg-bg-surface border-r border-border-subtle flex flex-col shrink-0">
-        <div className="p-4 border-b border-border-subtle">
+      <div className={clsx(
+        "bg-bg-surface border-r border-border-subtle flex flex-col shrink-0 transition-transform duration-200 z-30",
+        isMobile ? "absolute inset-y-0 left-0 w-[280px]" : "w-[300px]",
+        isMobile && !threadsPanelOpen && "-translate-x-full"
+      )}>
+        <div className="p-4 border-b border-border-subtle flex items-center justify-between">
           <h2 className="text-heading text-text-primary font-sans font-semibold">Messages</h2>
+          {isMobile && (
+            <button onClick={() => setThreadsPanelOpen(false)} className="p-1 text-text-muted hover:text-text-primary">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          )}
         </div>
         <div className="flex-1 overflow-y-auto">
           {loadingThreads ? (
@@ -160,7 +191,10 @@ export default function DMsPage() {
             threads.map((thread) => (
               <button
                 key={thread.threadId}
-                onClick={() => navigate(`/dms/${thread.threadId}`)}
+                onClick={() => {
+                  if (isMobile) setThreadsPanelOpen(false);
+                  navigate(`/dms/${thread.threadId}`);
+                }}
                 className={clsx(
                   'w-full flex items-center gap-3 px-4 py-3 transition-colors text-left relative',
                   activeThreadId === thread.threadId
@@ -212,6 +246,13 @@ export default function DMsPage() {
             {/* Chat header */}
             <div className="h-14 bg-bg-surface border-b border-border-subtle flex items-center justify-between px-4 shrink-0">
               <div className="flex items-center gap-3">
+                {isMobile && (
+                  <button onClick={() => setThreadsPanelOpen(true)} className="p-1 -ml-2 text-text-muted hover:text-text-primary rounded-md hover:bg-bg-overlay">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                  </button>
+                )}
                 <div className="w-9 h-9 rounded-full bg-accent/10 flex items-center justify-center">
                   <span className="text-sm text-accent font-medium">
                     {activeThread?.partner?.name?.charAt(0)?.toUpperCase() || '?'}
@@ -246,7 +287,7 @@ export default function DMsPage() {
                     >
                       <div
                         className={clsx(
-                          'max-w-[70%] px-4 py-2.5 rounded-2xl',
+                          'max-w-[85%] md:max-w-[70%] px-4 py-2.5 rounded-2xl',
                           isMe
                             ? 'bg-accent text-text-inverse rounded-br-md'
                             : 'bg-bg-surface border border-border-subtle text-text-primary rounded-bl-md',

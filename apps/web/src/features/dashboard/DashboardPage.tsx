@@ -58,7 +58,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Row 1: 4 Metric Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <MetricCard
           title="Overall Readiness"
           value={72}
@@ -114,15 +114,15 @@ export default function DashboardPage() {
       </div>
 
       {/* Row 2: Weakness Radar (2/3) + Weekly Goals Ring (1/3) */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="col-span-2 bg-bg-surface border border-border-subtle rounded-lg p-6">
-          <h3 className="text-heading text-text-primary font-sans font-semibold mb-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="col-span-1 md:col-span-2 bg-bg-surface border border-border-subtle rounded-lg p-6 flex flex-col items-center xl:items-start text-center xl:text-left">
+          <h3 className="text-heading text-text-primary font-sans font-semibold mb-2 text-center md:text-left w-full">
             Weakness Radar
           </h3>
-          <p className="text-caption text-text-muted mb-4">
+          <p className="text-caption text-text-muted mb-4 text-center md:text-left w-full">
             Your readiness across all domains
           </p>
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center w-full overflow-hidden">
             <WeaknessRadar data={MOCK_READINESS} size={280} />
           </div>
         </div>
@@ -137,7 +137,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Row 4: Activity Heatmap */}
-      <div className="bg-bg-surface border border-border-subtle rounded-lg p-6 mb-6">
+      <div className="bg-bg-surface border border-border-subtle rounded-lg p-6 mb-6 overflow-x-auto">
         <ActivityHeatmap data={activityData} />
       </div>
 

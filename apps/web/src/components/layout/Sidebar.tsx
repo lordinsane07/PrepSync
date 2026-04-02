@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { clsx } from 'clsx';
 import Avatar from '../ui/Avatar';
@@ -10,6 +11,8 @@ interface SidebarProps {
   onNewSession?: () => void;
   onToggle?: () => void;
   collapsed?: boolean;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
 interface NavItem {
@@ -101,16 +104,37 @@ export default function Sidebar({
   onNewSession,
   onToggle,
   collapsed = false,
+  mobileOpen = false,
+  onMobileClose,
 }: SidebarProps) {
   const location = useLocation();
 
+  // On mobile, auto-close sidebar when navigating
+  useEffect(() => {
+    if (mobileOpen && onMobileClose) {
+      onMobileClose();
+    }
+  }, [location.pathname]);
+
   return (
-    <aside
-      className={clsx(
-        'fixed left-0 top-0 h-screen bg-bg-surface border-r border-border-subtle flex flex-col z-40 transition-all duration-200',
-        collapsed ? 'w-16' : 'w-60',
+    <>
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/60 z-40"
+          onClick={onMobileClose}
+        />
       )}
-    >
+
+      <aside
+        className={clsx(
+          'fixed left-0 top-0 h-screen bg-bg-surface border-r border-border-subtle flex flex-col z-50 transition-transform duration-200',
+          collapsed ? 'w-16' : 'w-64',
+          // Mobile overrides: standard width when open, translate out when closed
+          'md:translate-x-0',
+          mobileOpen ? 'translate-x-0 w-64' : '-translate-x-full'
+        )}
+      >
       {/* Logo + Toggle */}
       <div className={clsx('flex items-center h-16 border-b border-border-subtle shrink-0', collapsed ? 'justify-center px-2' : 'justify-between px-5')}>
         <div className="flex items-center gap-2">
@@ -213,5 +237,6 @@ export default function Sidebar({
         </Button>
       </div>
     </aside>
+    </>
   );
 }
