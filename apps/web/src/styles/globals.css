@@ -189,6 +189,134 @@ body {
   background: #1a1d24 !important;
 }
 
+/* ─── Pinnable Tile Wrapper ─── */
+.gc-pinnable-tile {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.gc-pinnable-tile .lk-participant-tile {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+/* ─── Pin Overlay (shown on hover) ─── */
+.gc-pin-overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.gc-pinnable-tile:hover .gc-pin-overlay {
+  opacity: 1;
+}
+
+/* Always show when pinned */
+.gc-pin-overlay--spotlight {
+  opacity: 1;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gc-pin-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  color: #e8eaed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.gc-pin-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1);
+}
+
+.gc-pin-btn--active {
+  background: rgba(0, 212, 255, 0.25);
+  color: var(--color-accent);
+}
+
+.gc-pin-btn--active:hover {
+  background: rgba(0, 212, 255, 0.35);
+}
+
+.gc-pinned-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  color: var(--color-accent);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ─── Grid View (no pin) ─── */
+.gc-grid-view {
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+  height: 100%;
+  width: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-auto-rows: 1fr;
+}
+
+/* ─── Spotlight Layout (pinned) ─── */
+.gc-spotlight-layout {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  gap: 8px;
+  padding: 8px;
+}
+
+.gc-spotlight-main {
+  flex: 1;
+  min-width: 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.gc-spotlight-tile {
+  height: 100%;
+}
+
+.gc-spotlight-strip {
+  width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.gc-spotlight-thumb {
+  height: 140px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
 /* ─── Bottom Control Bar ─── */
 .gc-controls {
   position: absolute;
