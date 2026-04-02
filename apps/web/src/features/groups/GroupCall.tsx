@@ -63,10 +63,10 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="gc-chat-panel">
+    <div className="gc-side-panel">
       {/* Header */}
-      <div className="gc-chat-header">
-        <span className="gc-chat-title">In-call messages</span>
+      <div className="gc-side-panel-header">
+        <span className="gc-side-panel-title">In-call messages</span>
         <button className="gc-icon-btn" onClick={onClose} title="Close chat">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="6" x2="6" y2="18" />
@@ -79,7 +79,10 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
       <div className="gc-chat-messages" ref={scrollRef}>
         {chatMessages.length === 0 && (
           <div className="gc-chat-empty">
-            <p>Messages can only be seen by people in the call and are deleted when the call ends.</p>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-text-muted)', marginBottom: 8 }}>
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            <p>Messages are only visible to people in the call and are deleted when the call ends.</p>
           </div>
         )}
         {chatMessages.map((msg, i) => (
@@ -122,24 +125,114 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
-/* ─── Participant Count Badge ─── */
-function ParticipantCount() {
+/* ─── Participants Panel (Google Meet style) ─── */
+function ParticipantsPanel({ onClose }: { onClose: () => void }) {
   const participants = useParticipants();
+
   return (
-    <span className="gc-participant-count">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-      {participants.length}
-    </span>
+    <div className="gc-side-panel">
+      {/* Header */}
+      <div className="gc-side-panel-header">
+        <span className="gc-side-panel-title">People ({participants.length})</span>
+        <button className="gc-icon-btn" onClick={onClose} title="Close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Participant list */}
+      <div className="gc-participants-list">
+        {participants.map((p) => {
+          const name = p.name || p.identity || 'Unknown';
+          const initial = name.charAt(0).toUpperCase();
+          const isMuted = !p.isMicrophoneEnabled;
+          const isCameraOff = !p.isCameraEnabled;
+          const isLocal = p.isLocal;
+          const isSpeaking = p.isSpeaking;
+
+          return (
+            <div
+              key={p.sid}
+              className={`gc-participant-row ${isSpeaking ? 'gc-participant-row--speaking' : ''}`}
+            >
+              {/* Avatar */}
+              <div className="gc-participant-avatar">
+                <span>{initial}</span>
+              </div>
+
+              {/* Name */}
+              <div className="gc-participant-info">
+                <span className="gc-participant-name">
+                  {name}
+                  {isLocal && <span className="gc-participant-you">(You)</span>}
+                </span>
+              </div>
+
+              {/* Status icons */}
+              <div className="gc-participant-status">
+                {/* Mic status */}
+                {isMuted ? (
+                  <span className="gc-participant-icon gc-participant-icon--off" title="Mic off">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                      <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" />
+                      <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2c0 .76-.13 1.48-.35 2.17" />
+                      <line x1="12" y1="19" x2="12" y2="23" />
+                      <line x1="8" y1="23" x2="16" y2="23" />
+                    </svg>
+                  </span>
+                ) : (
+                  <span className="gc-participant-icon gc-participant-icon--on" title="Mic on">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                      <line x1="12" y1="19" x2="12" y2="23" />
+                      <line x1="8" y1="23" x2="16" y2="23" />
+                    </svg>
+                  </span>
+                )}
+
+                {/* Camera status */}
+                {isCameraOff ? (
+                  <span className="gc-participant-icon gc-participant-icon--off" title="Camera off">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                      <path d="M21 21H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3m3-3h6l2 3h4a2 2 0 0 1 2 2v9.34m-7.72-2.06a4 4 0 1 1-5.56-5.56" />
+                    </svg>
+                  </span>
+                ) : (
+                  <span className="gc-participant-icon gc-participant-icon--on" title="Camera on">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="23 7 16 12 23 17 23 7" />
+                      <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                    </svg>
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
 /* ─── Control Bar ─── */
-function ControlBar({ chatOpen, onToggleChat }: { chatOpen: boolean; onToggleChat: () => void }) {
+function ControlBar({
+  chatOpen,
+  participantsOpen,
+  onToggleChat,
+  onToggleParticipants,
+}: {
+  chatOpen: boolean;
+  participantsOpen: boolean;
+  onToggleChat: () => void;
+  onToggleParticipants: () => void;
+}) {
+  const participants = useParticipants();
+
   return (
     <div className="gc-controls">
       <div className="gc-controls-center">
@@ -155,16 +248,32 @@ function ControlBar({ chatOpen, onToggleChat }: { chatOpen: boolean; onToggleCha
       </div>
 
       <div className="gc-controls-right">
-        <ParticipantCount />
+        {/* Participants toggle */}
+        <button
+          className={`gc-ctrl-btn gc-ctrl-btn-subtle ${participantsOpen ? 'gc-ctrl-btn-active' : ''}`}
+          onClick={onToggleParticipants}
+          title="People"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          <span>{participants.length}</span>
+        </button>
+
+        {/* Chat toggle */}
         <button
           className={`gc-ctrl-btn gc-ctrl-btn-subtle ${chatOpen ? 'gc-ctrl-btn-active' : ''}`}
           onClick={onToggleChat}
-          title="Toggle chat"
+          title="Chat"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
         </button>
+
         <DisconnectButton className="gc-leave-btn">
           Leave
         </DisconnectButton>
@@ -175,15 +284,29 @@ function ControlBar({ chatOpen, onToggleChat }: { chatOpen: boolean; onToggleCha
 
 /* ─── Call Stage (inside LiveKitRoom) ─── */
 function CallStage() {
-  const [chatOpen, setChatOpen] = useState(false);
+  const [activePanel, setActivePanel] = useState<'none' | 'chat' | 'participants'>('none');
+
+  const toggleChat = () => {
+    setActivePanel((prev) => (prev === 'chat' ? 'none' : 'chat'));
+  };
+
+  const toggleParticipants = () => {
+    setActivePanel((prev) => (prev === 'participants' ? 'none' : 'participants'));
+  };
 
   return (
     <div className="gc-stage">
       <div className="gc-video-area">
         <VideoGrid />
       </div>
-      {chatOpen && <ChatPanel onClose={() => setChatOpen(false)} />}
-      <ControlBar chatOpen={chatOpen} onToggleChat={() => setChatOpen((v) => !v)} />
+      {activePanel === 'chat' && <ChatPanel onClose={() => setActivePanel('none')} />}
+      {activePanel === 'participants' && <ParticipantsPanel onClose={() => setActivePanel('none')} />}
+      <ControlBar
+        chatOpen={activePanel === 'chat'}
+        participantsOpen={activePanel === 'participants'}
+        onToggleChat={toggleChat}
+        onToggleParticipants={toggleParticipants}
+      />
     </div>
   );
 }

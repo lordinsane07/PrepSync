@@ -112,7 +112,7 @@ export default function Sidebar({
       )}
     >
       {/* Logo + Toggle */}
-      <div className={clsx('flex items-center h-16 border-b border-border-subtle shrink-0', collapsed ? 'flex-col justify-center gap-1 px-0' : 'justify-between px-5')}>
+      <div className={clsx('flex items-center h-16 border-b border-border-subtle shrink-0', collapsed ? 'justify-center px-2' : 'justify-between px-5')}>
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-md bg-accent flex items-center justify-center shrink-0">
             <span className="text-[11px] font-bold text-text-inverse font-mono">PS</span>
@@ -123,25 +123,37 @@ export default function Sidebar({
             </span>
           )}
         </div>
-        {onToggle && (
+        {onToggle && !collapsed && (
           <button
             onClick={onToggle}
-            className={clsx(
-              'rounded-md flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-bg-overlay transition-colors',
-              collapsed ? 'w-7 h-7 mt-1' : 'w-8 h-8',
-            )}
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="w-8 h-8 rounded-md flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-bg-overlay transition-colors"
+            title="Collapse sidebar"
           >
             <svg
               width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
               strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-              style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s ease' }}
             >
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
         )}
       </div>
+
+      {/* Expand toggle when collapsed */}
+      {onToggle && collapsed && (
+        <button
+          onClick={onToggle}
+          className="mx-auto mt-2 w-10 h-8 rounded-md flex items-center justify-center text-text-muted hover:text-accent hover:bg-bg-overlay transition-colors"
+          title="Expand sidebar"
+        >
+          <svg
+            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          >
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      )}
 
       {/* User info */}
       {!collapsed && (

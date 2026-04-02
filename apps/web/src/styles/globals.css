@@ -295,20 +295,8 @@ body {
   transform: scale(1.03);
 }
 
-/* Participant count badge */
-.gc-participant-count {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--color-text-secondary);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 0 8px;
-}
-
-/* ─── Chat Sidebar ─── */
-.gc-chat-panel {
+/* ─── Shared Side Panel (Chat + Participants) ─── */
+.gc-side-panel {
   width: 340px;
   min-width: 300px;
   max-width: 400px;
@@ -319,9 +307,21 @@ body {
   margin: 8px 8px 72px 0;
   border-radius: 12px;
   overflow: hidden;
+  animation: gc-slide-in 0.2s ease-out;
 }
 
-.gc-chat-header {
+@keyframes gc-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.gc-side-panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -329,7 +329,7 @@ body {
   border-bottom: 1px solid #1e2330;
 }
 
-.gc-chat-title {
+.gc-side-panel-title {
   font-family: 'DM Sans', sans-serif;
   font-size: 15px;
   font-weight: 600;
@@ -355,6 +355,102 @@ body {
   color: var(--color-text-primary);
 }
 
+/* ─── Participants List ─── */
+.gc-participants-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.gc-participant-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  transition: background 0.15s ease;
+}
+
+.gc-participant-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.gc-participant-row--speaking {
+  background: rgba(0, 212, 255, 0.06);
+}
+
+.gc-participant-row--speaking .gc-participant-avatar {
+  box-shadow: 0 0 0 2px var(--color-accent);
+}
+
+.gc-participant-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3c4043, #5f6368);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: box-shadow 0.2s ease;
+}
+
+.gc-participant-avatar span {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.gc-participant-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.gc-participant-name {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gc-participant-you {
+  font-weight: 400;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  margin-left: 6px;
+}
+
+.gc-participant-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.gc-participant-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.gc-participant-icon--on {
+  color: var(--color-text-secondary);
+}
+
+.gc-participant-icon--off {
+  color: #ea4335;
+  background: rgba(234, 67, 53, 0.12);
+  border-radius: 50%;
+  padding: 4px;
+}
+
+/* ─── Chat Messages ─── */
 .gc-chat-messages {
   flex: 1;
   overflow-y: auto;
@@ -367,6 +463,7 @@ body {
 .gc-chat-empty {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
@@ -378,6 +475,7 @@ body {
   font-size: 13px;
   color: var(--color-text-muted);
   line-height: 1.5;
+  max-width: 240px;
 }
 
 .gc-chat-msg {
@@ -420,6 +518,7 @@ body {
   padding: 12px 16px;
   border-top: 1px solid #1e2330;
   background: #222631;
+  border-radius: 0 0 12px 12px;
 }
 
 .gc-chat-input {
@@ -529,7 +628,6 @@ body {
   height: calc(100vh - 64px); /* 64px TopBar */
   display: flex;
   position: relative;
-  overflow: hidden;
 }
 
 /* ─── Groups Side Panel ─── */
@@ -645,32 +743,40 @@ body {
   margin-top: 2px;
 }
 
-/* ─── Expand Button (thin strip on edge) ─── */
-.dgp-expand-btn {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 15;
-  width: 24px;
-  height: 56px;
+/* ─── Expand Strip (inline, in-flow) ─── */
+.dgp-expand-strip {
+  width: 20px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--color-bg-surface);
+  border-right: 1px solid var(--color-border-subtle);
+  cursor: pointer;
+  transition: width 0.2s ease, background 0.2s ease;
+}
+
+.dgp-expand-strip:hover {
+  width: 28px;
   background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-subtle);
-  border-left: none;
-  border-radius: 0 8px 8px 0;
+}
+
+.dgp-expand-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
   cursor: pointer;
   color: var(--color-text-muted);
-  transition: all 0.2s ease;
+  transition: color 0.2s ease;
+  padding: 0;
 }
 
 .dgp-expand-btn:hover {
-  width: 28px;
-  background: var(--color-bg-overlay);
   color: var(--color-accent);
-  border-color: var(--color-accent-border);
 }
 
 /* ─── Icon Button (reused) ─── */

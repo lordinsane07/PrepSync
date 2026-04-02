@@ -206,17 +206,19 @@ export default function DomainGroupsPage() {
         </div>
       </div>
 
-      {/* ── Expand groups button (shown when panel hidden) ── */}
+      {/* ── Expand groups strip (inline, always clickable) ── */}
       {!groupsPanelOpen && (
-        <button
-          onClick={() => setGroupsPanelOpen(true)}
-          className="dgp-expand-btn"
-          title="Show groups panel"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        </button>
+        <div className="dgp-expand-strip">
+          <button
+            onClick={() => setGroupsPanelOpen(true)}
+            className="dgp-expand-btn"
+            title="Show groups panel"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+        </div>
       )}
 
       {/* ── Main Content ── */}
